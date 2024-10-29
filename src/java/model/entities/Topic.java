@@ -13,12 +13,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement
+@XmlRootElement // Tanto el Comment como el topic deben tenerlo 
 @Entity
 public class Topic implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
-    @SequenceGenerator(name="Topic_Gen", allocationSize=1)
+    @SequenceGenerator(name="Topic_Gen", allocationSize=1) // Els identificadors creixeran un a un
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Topic_Gen") 
     private Long id;
     private String name;
