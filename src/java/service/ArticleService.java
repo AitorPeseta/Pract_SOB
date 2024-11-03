@@ -4,6 +4,22 @@
  */
 package service;
 
+import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
+import java.util.List;
+import model.entities.Article;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import java.security.Principal;
+
+@Path("/rest/api/v1/article")
+
+
 /**
  *
  * @author aito
@@ -25,6 +41,39 @@ Si s'especifica el paràmetre "author", només s'inclouran en el llistat els art
 El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'acceptarà com a vàlid retornar el llistat de tots els articles i filtrar-los de forma programàtica amb Java.
      */
     
+    @PersistenceContext
+    private EntityManager em;
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getArticles(@QueryParam("topic") List<String> topics,
+                                @QueryParam("author") String author) {
+        // Verificación del número de topics
+        if (topics != null && topics.size() > 2) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("No se pueden especificar más de dos topics.").build();
+        }
+
+        // Caso 1: No hay filtros, usar findAllPublic
+        if ((topics == null || topics.isEmpty()) && (author == null || author.isEmpty())) {
+            TypedQuery<Article> query = em.createNamedQuery("Article.findAllPublic", Article.class);
+            List<Article> articles = query.getResultList();
+            return Response.ok(articles).build();
+        }
+
+        // Caso 2: Filtros aplicados, usar findByAuthorAndTopics
+        TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthorAndTopics", Article.class);
+        
+        // Asignación de parámetros, si no existen se asigna a null para no aplicarlos en la consulta
+        query.setParameter("author", author != null && !author.isEmpty() ? author : null);
+        query.setParameter("topic1", topics != null && !topics.isEmpty() ? topics.get(0) : null);
+        query.setParameter("topic2", topics != null && topics.size() > 1 ? topics.get(1) : null);
+
+        List<Article> articles = query.getResultList();
+        return Response.ok(articles).build();
+    }
+    
+    
     /**
      * GET /rest/api/v1/article/${id}
 
@@ -34,14 +83,41 @@ Si l'article és privat, només es podrà retornar si l'usuari està registrat.
 
 Aquesta operació implica augmentar el nombre de visualitzacions de l'article en +1. 
      */
+    //TODO
     
     /**
      * DELETE /rest/api/v1/article/${id}
-Opcional! Esborra l'article amb identificador ${id} del sistema.
-
-Per aquesta operació, cal que l'usuari sigui l'autor de l'article i estigui autentificat.
+Opcional! Esborra l'article amb identificador ${id} del sistema.Per aquesta operació, cal que l'usuari sigui l'autor de l'article i estigui autentificat.
+     * @param id
+     * @param securityContext
+     * @return 
      */
-    
+    @DELETE
+    @Path("/{id}")
+    @Transactional
+    public Response deleteArticle(@PathParam("id") int id, @Context SecurityContext securityContext) {
+        // Verificar autenticación
+        Principal userPrincipal = securityContext.getUserPrincipal();
+        if (userPrincipal == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
+        }
+
+        // Buscar el artículo en la base de datos
+        Article article = em.find(Article.class, id);
+        if (article == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontrado.").build();
+        }
+
+        // Verificar que el usuario autenticado es el autor del artículo
+        String username = userPrincipal.getName(); // supondremos que este es el nombre del usuario autenticado
+        if (!article.getAuthor().getUsername().equals(username)) {
+            return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para eliminar este artículo.").build();
+        }
+
+        // Eliminar el artículo
+        em.remove(article);
+        return Response.noContent().build();
+    }
     /**
      * POST/rest/api/v1/article
 

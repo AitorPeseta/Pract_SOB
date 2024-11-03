@@ -11,8 +11,22 @@ import java.util.Date;
 import java.util.List;
 import jakarta.persistence.*;
 
-@XmlRootElement // Tanto el Comment como el topic deben tenerlo 
+@XmlRootElement
 @Entity
+@NamedQueries({
+    @NamedQuery(
+        name = "Article.findAllPublic",
+        query = "SELECT a FROM Article a WHERE a.isPublic = TRUE ORDER BY a.views DESC"
+    ),
+    @NamedQuery(
+        name = "Article.findByAuthorAndTopics",
+        query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
+                "AND (:author IS NULL OR a.author.name = :author) " +
+                "AND ((:topic1 IS NULL OR :topic1 MEMBER OF a.topics) " +
+                "AND (:topic2 IS NULL OR :topic2 MEMBER OF a.topics)) " +
+                "ORDER BY a.views DESC"
+    )
+})
 public class Article implements Serializable {
     private static final long serialVersionUID = 1L;
     

@@ -11,8 +11,13 @@ import java.util.Date;
 import java.util.List;
 import jakarta.persistence.*;
 
-@XmlRootElement // Tanto el Comment como el topic deben tenerlo 
+@XmlRootElement
 @Entity
+@NamedQuery(
+    name = "Customer.findAllWithoutSensitiveData",
+    query = "SELECT NEW model.entities.Customer(c.id, c.username, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
+            "FROM Customer c"
+)
 public class Customer implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
@@ -34,7 +39,17 @@ public class Customer implements Serializable {
     
     @OneToMany(mappedBy = "author", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<Article> articles;
-
+    
+    //Constructor sin datos confidenciales
+    public Customer(int id, String username, String email, Boolean isAuthor, Long lastArticleId, Date registrationDate) {
+    this.id = id;
+    this.username = username;
+    this.email = email;
+    this.isAuthor = isAuthor;
+    this.lastArticleId = lastArticleId;
+    this.registrationDate = registrationDate;
+    }
+    
     public static long getSerialVersionUID() {
         return serialVersionUID;
     }
