@@ -102,6 +102,18 @@ Retorna la informació de l'usuari amb identificador ${id}.
 Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya d'aquest usuari.
      */
     
+    @GET
+    @Path("/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getArticleId(@PathParam("id") int id){
+    
+        Customer customer = em.createNamedQuery("Customer.findCustomerWithoutSensitiveData", Customer.class).setParameter("id",id).getSingleResult();
+        
+        if(customer == null) return Response.status(Response.Status.BAD_REQUEST).entity("Invalid id author").build();
+        else return Response.ok(customer).build();
+      
+    }
+    
     /**
      * PUT /rest/api/v1/customer/${id}
 

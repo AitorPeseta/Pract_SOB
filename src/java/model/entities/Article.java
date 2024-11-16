@@ -25,7 +25,15 @@ import jakarta.persistence.*;
                 "AND ((:topic1 IS NULL OR :topic1 MEMBER OF a.topics) " +
                 "AND (:topic2 IS NULL OR :topic2 MEMBER OF a.topics)) " +
                 "ORDER BY a.views DESC"
-    )
+    ),
+    @NamedQuery(
+            name = "Article.findArticleId",
+            query = "SELECT a FROM Article a WHERE a.id = :id"
+    ),
+    @NamedQuery(
+            name = "Article.insertArticulo",
+            query = "INSERT INTO Article(id, title, content, summary, author) VALUES (:id, :title, :content, :summary, :author)"
+    )   
 })
 public class Article implements Serializable {
     private static final long serialVersionUID = 1L;

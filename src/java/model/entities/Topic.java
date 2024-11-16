@@ -10,11 +10,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement // Tanto el Comment como el topic deben tenerlo 
 @Entity
+@NamedQueries({
+    @NamedQuery(
+        name = "Topis.existTopic",
+        query = "SELECT COUNT(*) FROM Topic t WHERE t.id = :id "
+    )
+})
 public class Topic implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id

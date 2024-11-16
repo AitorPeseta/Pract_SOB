@@ -16,6 +16,9 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
+import javax.annotation.security.RolesAllowed;
+import java.util.Calendar;
+import java.util.Date;
 
 @Path("/rest/api/v1/article")
 
@@ -83,7 +86,34 @@ Si l'article és privat, només es podrà retornar si l'usuari està registrat.
 
 Aquesta operació implica augmentar el nombre de visualitzacions de l'article en +1. 
      */
-    //TODO
+    
+    @GET
+    @Path("/{id}")
+    @Transactional
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getArticleId(@PathParam("id") int id, @Context SecurityContext securityContext){
+        
+        // Obtener el artículo de la base de datos usando su ID
+        Article article = em.createNamedQuery("Article.findArticleId", Article.class).setParameter("id",id).getSingleResult();
+        
+        if (article == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
+        }
+
+        // Verificar si el artículo es privado y el usuario no está autenticado
+        if (!article.getIsPublic()) {
+            Principal userPrincipal = securityContext.getUserPrincipal();
+            if (userPrincipal == null) {
+                return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
+            }
+        }
+
+        // Incrementar el contador de vistas
+        article.incrementViews();
+
+        return Response.ok(article).build();
+    }
+    
     
     /**
      * DELETE /rest/api/v1/article/${id}
@@ -129,4 +159,51 @@ Cal retornar el codi HTTP 201 Created en cas afirmatiu juntament amb l'identific
 
 Per aquesta operació, cal que l'usuari estigui autentificat.
      */
+    
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response createArticle(Article article, @Context SecurityContext securityContext) {
+
+        // Verificar autenticación
+        Principal userPrincipal = securityContext.getUserPrincipal();
+        if (userPrincipal == null) {
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
+        }
+
+        // 2. Validar que el usuario existe
+        
+        Long author_exist = em.createNamedQuery("Customer.existAuthor", Long.class).setParameter("id",article.getAuthor()).getSingleResult();
+
+        if (author_exist < 0) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid author").build();
+        }
+
+        // 3. Validar que los temas son válidos
+        List<String> topics = article.getTopics();
+        for(int i=0; i<topics.size();i++){
+            Article sol = em.createNamedQuery("Topic.existTopic", Article.class).setParameter("id",topics.get(i)).getSingleResult();
+            if (sol != null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid topics").build();
+            }
+        }
+
+        // 4. Establecer la fecha de publicación automáticamente
+        article.setPublishedDate(new Date());
+
+        // 5. Guardar el artículo en la base de datos y obtener su ID
+        int articleId = article.getId();
+        em.createNamedQuery("Article.insertArticle")
+                .setParameter("id",article.getId())
+                .setParameter("title", article.getTitle())
+                .setParameter("content", article.getContent())
+                .setParameter("summary", article.getSummary())
+                .setParameter("author", article.getAuthor())
+                .executeUpdate();
+        
+        // 6. Retornar respuesta con código 201 Created y el ID del artículo
+        return Response.status(Response.Status.CREATED)
+                .entity("Article created with ID: " + articleId)
+                .build();
+    }
 }

@@ -13,11 +13,22 @@ import jakarta.persistence.*;
 
 @XmlRootElement
 @Entity
-@NamedQuery(
-    name = "Customer.findAllWithoutSensitiveData",
-    query = "SELECT NEW model.entities.Customer(c.id, c.username, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
-            "FROM Customer c"
-)
+@NamedQueries({
+    @NamedQuery(
+        name = "Customer.findAllWithoutSensitiveData",
+        query = "SELECT NEW model.entities.Customer(c.id, c.username, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
+                "FROM Customer c"
+    ),
+    @NamedQuery(
+        name = "Customer.findCustomerWithoutSensitiveData",
+        query = "SELECT NEW model.entities.Customer(c.id, c.username, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
+                "FROM Customer c WHERE c.id = :id" 
+    ),
+    @NamedQuery(
+            name = "Customer.existAuthor",
+            query = "SELECT COUNT(*) FROM Customer c WHERE c.id = :id"
+    )
+})
 public class Customer implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
