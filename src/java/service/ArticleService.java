@@ -4,6 +4,7 @@
  */
 package service;
 
+import authn.Secured;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -12,6 +13,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
 import model.entities.Article;
+import model.entities.Customer;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
@@ -44,7 +46,7 @@ Si s'especifica el paràmetre "author", només s'inclouran en el llistat els art
 El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'acceptarà com a vàlid retornar el llistat de tots els articles i filtrar-los de forma programàtica amb Java.
      */
     
-    @PersistenceContext
+    @PersistenceContext(unitName = "Homework1PU")
     private EntityManager em;
 
     @GET
@@ -90,8 +92,9 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     @GET
     @Path("/{id}")
     @Transactional
+    @Secured
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getArticleId(@PathParam("id") int id, @Context SecurityContext securityContext){
+    public Response getArticleId(@PathParam("id") int id){
         
         // Obtener el artículo de la base de datos usando su ID
         Article article = em.createNamedQuery("Article.findArticleId", Article.class).setParameter("id",id).getSingleResult();
@@ -102,10 +105,9 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
 
         // Verificar si el artículo es privado y el usuario no está autenticado
         if (!article.getIsPublic()) {
-            Principal userPrincipal = securityContext.getUserPrincipal();
-            if (userPrincipal == null) {
+            
                 return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
-            }
+            
         }
 
         // Incrementar el contador de vistas
@@ -124,13 +126,9 @@ Opcional! Esborra l'article amb identificador ${id} del sistema.Per aquesta oper
      */
     @DELETE
     @Path("/{id}")
+    @Secured
     @Transactional
-    public Response deleteArticle(@PathParam("id") int id, @Context SecurityContext securityContext) {
-        // Verificar autenticación
-        Principal userPrincipal = securityContext.getUserPrincipal();
-        if (userPrincipal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
-        }
+    public Response deleteArticle(@PathParam("id") int id) {
 
         // Buscar el artículo en la base de datos
         Article article = em.find(Article.class, id);
@@ -139,7 +137,7 @@ Opcional! Esborra l'article amb identificador ${id} del sistema.Per aquesta oper
         }
 
         // Verificar que el usuario autenticado es el autor del artículo
-        String username = userPrincipal.getName(); // supondremos que este es el nombre del usuario autenticado
+        String username = article.getAuthor().getUsername(); // supondremos que este es el nombre del usuario autenticado
         if (!article.getAuthor().getUsername().equals(username)) {
             return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para eliminar este artículo.").build();
         }
@@ -161,49 +159,15 @@ Per aquesta operació, cal que l'usuari estigui autentificat.
      */
     
     @POST
+    @Secured
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces(MediaType.APPLICATION_JSON)
-    public Response createArticle(Article article, @Context SecurityContext securityContext) {
-
-        // Verificar autenticación
-        Principal userPrincipal = securityContext.getUserPrincipal();
-        if (userPrincipal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
-        }
-
-        // 2. Validar que el usuario existe
+    public Response createArticle(Article article) {
         
-        Long author_exist = em.createNamedQuery("Customer.existAuthor", Long.class).setParameter("id",article.getAuthor()).getSingleResult();
-
-        if (author_exist < 0) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid author").build();
-        }
-
-        // 3. Validar que los temas son válidos
-        List<String> topics = article.getTopics();
-        for(int i=0; i<topics.size();i++){
-            Article sol = em.createNamedQuery("Topic.existTopic", Article.class).setParameter("id",topics.get(i)).getSingleResult();
-            if (sol != null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid topics").build();
-            }
-        }
-
-        // 4. Establecer la fecha de publicación automáticamente
-        article.setPublishedDate(new Date());
-
-        // 5. Guardar el artículo en la base de datos y obtener su ID
-        int articleId = article.getId();
-        em.createNamedQuery("Article.insertArticle")
-                .setParameter("id",article.getId())
-                .setParameter("title", article.getTitle())
-                .setParameter("content", article.getContent())
-                .setParameter("summary", article.getSummary())
-                .setParameter("author", article.getAuthor())
-                .executeUpdate();
+        em.persist(article);
         
-        // 6. Retornar respuesta con código 201 Created y el ID del artículo
         return Response.status(Response.Status.CREATED)
-                .entity("Article created with ID: " + articleId)
+                .entity("Article created with ID: " + article.getId())
                 .build();
     }
 }

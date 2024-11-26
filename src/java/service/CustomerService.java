@@ -40,7 +40,7 @@ Si l'usuari és autor d'un article, cal indicar que és autor i retornar l'enlla
                  }
 Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya dels usuaris.
      */
-    @PersistenceContext
+    @PersistenceContext(unitName = "Homework1PU")
     private EntityManager em;
 
     @GET
@@ -143,12 +143,7 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
     @Path("/{id}")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Transactional
-    public Response updateCustomer(@PathParam("id") int id, Customer updatedCustomer, @Context SecurityContext securityContext) {
-        // Verificar autenticación
-        Principal userPrincipal = securityContext.getUserPrincipal();   //Java security Principal
-        if (userPrincipal == null) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
-        }
+    public Response updateCustomer(@PathParam("id") int id, Customer updatedCustomer) {
 
         // Obtener el usuario autenticado y verificar si coincide con el cliente que desea actualizar
         Customer currentCustomer = em.find(Customer.class, id);
@@ -156,7 +151,7 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
             return Response.status(Response.Status.NOT_FOUND).entity("Cliente no encontrado.").build();
         }
 
-        String authenticatedUsername = userPrincipal.getName();
+        String authenticatedUsername = updatedCustomer.getUsername();
         if (!authenticatedUsername.equals(currentCustomer.getUsername())) {
             return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para modificar este cliente.").build();
         }

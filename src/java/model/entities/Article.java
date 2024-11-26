@@ -21,7 +21,7 @@ import jakarta.persistence.*;
     @NamedQuery(
         name = "Article.findByAuthorAndTopics",
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
-                "AND (:author IS NULL OR a.author.name = :author) " +
+                "AND (:author IS NULL OR a.author.username = :author) " +
                 "AND ((:topic1 IS NULL OR :topic1 MEMBER OF a.topics) " +
                 "AND (:topic2 IS NULL OR :topic2 MEMBER OF a.topics)) " +
                 "ORDER BY a.views DESC"
@@ -29,11 +29,7 @@ import jakarta.persistence.*;
     @NamedQuery(
             name = "Article.findArticleId",
             query = "SELECT a FROM Article a WHERE a.id = :id"
-    ),
-    @NamedQuery(
-            name = "Article.insertArticulo",
-            query = "INSERT INTO Article(id, title, content, summary, author) VALUES (:id, :title, :content, :summary, :author)"
-    )   
+    )
 })
 public class Article implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -43,119 +39,107 @@ public class Article implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Article_Gen") 
     private int id;
     
-    private String title;
-    
     private String content;
     
+    private String featuredImageUrl;
+    
+    private Boolean isPublic;
+    
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date publishedDate = new Date();
+    
     private String summary;
+    
+    private String title;
+    
+    private Integer views = 0;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "autor_id", nullable = false)
     private Customer author;
     
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date publishedDate = new Date();
-    
     @ElementCollection
     @Column(name = "topic")
     private List<String> topics;
-    
-    private Boolean isPublic = true;
-    
-    private Integer views = 0;
-    
-    private String featuredImageUrl;
-    
-    public Integer getPopularity(){
-        return views;
-    }
-    
-    public void incrementViews(){
-        this.views++; 
-    }
-
-    public static long getSerialVersionUID() {
-        return serialVersionUID;
-    }
 
     public int getId() {
         return id;
     }
+    
+    public String getContent() {
+        return content;
+    }
+    
+    public String getFeaturedImageUrl() {
+        return featuredImageUrl;
+    }
+    
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
 
+     public Date getPublishedDate() {
+        return publishedDate;
+    }
+    
+    public String getSummary() {
+        return summary;
+    } 
+     
     public String getTitle() {
         return title;
     }
 
-    public String getContent() {
-        return content;
+    public Integer getViews() {
+        return views;
     }
-
-    public String getSummary() {
-        return summary;
-    }
-
+    
     public Customer getAuthor() {
         return author;
-    }
-
-    public Date getPublishedDate() {
-        return publishedDate;
     }
 
     public List<String> getTopics() {
         return topics;
     }
 
-    public Boolean getIsPublic() {
-        return isPublic;
-    }
-
-    public Integer getViews() {
-        return views;
-    }
-
-    public String getFeaturedImageUrl() {
-        return featuredImageUrl;
-    }
-
     public void setId(int id) {
         this.id = id;
     }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
+    
     public void setContent(String content) {
         this.content = content;
     }
-
+    
+    public void setFeaturedImageUrl(String featuredImageUrl) {
+        this.featuredImageUrl = featuredImageUrl;
+    }
+    
+     public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+     
+    public void setPublishedDate(Date publishedDate) {
+        this.publishedDate = publishedDate;
+    }
+    
     public void setSummary(String summary) {
         this.summary = summary;
+    } 
+     
+    public void setTitle(String title) {
+        this.title = title;
+    }
+    
+    public void setViews(Integer views) {
+        this.views = views;
     }
 
     public void setAuthor(Customer author) {
         this.author = author;
     }
 
-    public void setPublishedDate(Date publishedDate) {
-        this.publishedDate = publishedDate;
-    }
-
     public void setTopics(List<String> topics) {
         this.topics = topics;
-    }
-
-    public void setIsPublic(Boolean isPublic) {
-        this.isPublic = isPublic;
-    }
-
-    public void setViews(Integer views) {
-        this.views = views;
-    }
-
-    public void setFeaturedImageUrl(String featuredImageUrl) {
-        this.featuredImageUrl = featuredImageUrl;
     }
 
     @Override
@@ -184,6 +168,20 @@ public class Article implements Serializable {
     public String toString() {
         return "Article{" + "id=" + id + ", title=" + title + ", content=" + content + ", summary=" + summary + ", author=" + author + ", publishedDate=" + publishedDate + ", topics=" + topics + ", isPublic=" + isPublic + ", views=" + views + ", featuredImageUrl=" + featuredImageUrl + '}';
     }
+    
+     public Integer getPopularity(){
+        return views;
+    }
+    
+    public void incrementViews(){
+        this.views++; 
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+    
+    public Article(){}
    
 }
     

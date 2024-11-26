@@ -26,7 +26,7 @@ import jakarta.persistence.*;
     ),
     @NamedQuery(
             name = "Customer.existAuthor",
-            query = "SELECT COUNT(*) FROM Customer c WHERE c.id = :id"
+            query = "SELECT COUNT(c) FROM Customer c WHERE c.id = :id"
     )
 })
 public class Customer implements Serializable {
@@ -36,61 +36,47 @@ public class Customer implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Customer_Gen") 
     private int id;
     
-    private String username;
-    
-    private String password;
-    
     private String email;
     
-    private Boolean isAuthor = false;
+    private Boolean isAuthor;
     
     private Long lastArticleId; // Para HATEOAS
     
-    private Date registrationDate = new Date();
+    private String password;
     
+    private Date registrationDate = new Date();
+
+    private String username;
+       
     @OneToMany(mappedBy = "author", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<Article> articles;
-    
-    //Constructor sin datos confidenciales
-    public Customer(int id, String username, String email, Boolean isAuthor, Long lastArticleId, Date registrationDate) {
-    this.id = id;
-    this.username = username;
-    this.email = email;
-    this.isAuthor = isAuthor;
-    this.lastArticleId = lastArticleId;
-    this.registrationDate = registrationDate;
-    }
-    
-    public static long getSerialVersionUID() {
-        return serialVersionUID;
-    }
-
+  
     public int getId() {
         return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public String getEmail() {
         return email;
     }
-
+    
     public Boolean getIsAuthor() {
         return isAuthor;
     }
-
+    
     public Long getLastArticleId() {
         return lastArticleId;
     }
-
+    
+    public String getPassword() {
+        return password;
+    }
+    
     public Date getRegistrationDate() {
         return registrationDate;
+    }
+    
+    public String getUsername() {
+        return username;
     }
 
     public List<Article> getArticles() {
@@ -100,33 +86,33 @@ public class Customer implements Serializable {
     public void setId(int id) {
         this.id = id;
     }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
+    
     public void setEmail(String email) {
         this.email = email;
     }
-
+    
     public void setIsAuthor(Boolean isAuthor) {
         this.isAuthor = isAuthor;
     }
-
+    
     public void setLastArticleId(Long lastArticleId) {
         this.lastArticleId = lastArticleId;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setRegistrationDate(Date registrationDate) {
         this.registrationDate = registrationDate;
     }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public void setArticles(List<Article> articles) {
-        this.articles = articles;
+    public void setArticles(Article articles) {
+        this.articles.add(articles);
     }
 
     @Override
@@ -155,6 +141,21 @@ public class Customer implements Serializable {
     public String toString() {
         return "Customer{" + "id=" + id + ", username=" + username + ", password=" + password + ", email=" + email + ", isAuthor=" + isAuthor + ", lastArticleId=" + lastArticleId + ", registrationDate=" + registrationDate + ", articles=" + articles + '}';
     }
-
     
+     public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public Customer() {
+    }
+    
+    //Constructor sin datos confidenciales
+    public Customer(int id, String username, String email, Boolean isAuthor, Long lastArticleId, Date registrationDate) {
+    this.id = id;
+    this.username = username;
+    this.email = email;
+    this.isAuthor = isAuthor;
+    this.lastArticleId = lastArticleId;
+    this.registrationDate = registrationDate;
+    }
 }

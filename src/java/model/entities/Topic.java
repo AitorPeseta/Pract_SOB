@@ -20,7 +20,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(
         name = "Topis.existTopic",
-        query = "SELECT COUNT(*) FROM Topic t WHERE t.id = :id "
+        query = "SELECT COUNT(t) FROM Topic t WHERE t.id = :id "
     )
 })
 public class Topic implements Serializable {
