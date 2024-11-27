@@ -3,6 +3,10 @@
 <%@ page import="java.sql.DriverManager" %>
 <%@ page import="java.sql.Statement" %>
 <%@ page import="java.sql.SQLException" %>
+<%@ page import="java.sql.ResultSet" %>
+<%@ page import="java.sql.PreparedStatement" %>
+
+
 
 <!DOCTYPE html>
 <html>
@@ -27,21 +31,14 @@
                 Class.forName("org.apache.derby.jdbc.ClientDriver");
 
                 // Conectar a la base de datos
-                Connection con = DriverManager.getConnection("jdbc:derby://localhost:1527/" + dbname, "root", "root");
-                Statement stmt = con.createStatement();
+                Connection connection = DriverManager.getConnection("jdbc:derby://localhost:1527/" + dbname, "root", "root");
+                Statement stmt = connection.createStatement();
 
-                // Ingresar datos
-                String data[] = new String[]{
-                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Computer Science')",
-                    "INSERT INTO " + schema + ".COMMENT VALUES (NEXT VALUE FOR COMMENT_GEN, 'Skeleton code', 1)",
-                    "INSERT INTO " + schema + ".COMMENT VALUES (NEXT VALUE FOR COMMENT_GEN, 'for homework1', 1)",
+               String data[] = new String[]{
                     "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN, 'sob', 'sob')",
-                    "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'johndoe', 'password123', 'johndoe@example.com', false, NULL, NULL, NULL)",
-                    "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'janedoe', 'securepassword', 'janedoe@example.com', false, NULL)",
-                    "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'writerX', 'passWriter', 'writerX@example.com', true, 1)",
-                    "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Understanding Databases','Content about databases...', 'A brief overview of databases', 1, 'Databases, SQL, Data Management', true)",
-                    "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Introduction to Java','Content about Java programming...', 'Summary of Java programming', 2, 'Programming, Java, Object-Oriented', false)",
-                    "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Web Development Basics', 'Learn about HTML, CSS, and JavaScript...', 'Quick start guide to web development', 3, 'Web Development, HTML, CSS', true)"
+                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Computer Science')",
+                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Databases')",
+                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Programming')"
                 };
 
                 for (String datum : data) {
@@ -52,9 +49,58 @@
                     out.println("<pre> -> " + datum + "</pre>");
                 }
 
+                String insertCustomerSQL1 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'johndoe@example.com', 0, NULL, 'password123', NULL, 'johndoe')";
+                stmt.executeUpdate(insertCustomerSQL1);
+                // Recuperar el último valor de clave generada
+                String identityQuery1 = "SELECT id FROM " + schema + ".CUSTOMER WHERE username = 'johndoe'";
+                ResultSet rs1 = stmt.executeQuery(identityQuery1);
+                Long customerid1 = null;
+
+                if (rs1.next()) {
+                    customerid1 = rs1.getLong(1);
+                }
+
+                out.println("<pre>Generated topic ID: " + customerid1 + "</pre>");
+                String insertCommentSQL1 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about databases...', NULL, 1, NULL, 'A brief overview of databases', 'Understanding Databases', 'Computer Science', 'Databases', 0, " + customerid1 + ")";
+                stmt.executeUpdate(insertCommentSQL1);
+                out.println("<pre> -> " + insertCommentSQL1 + "</pre>");
+               
+                String insertCustomerSQL2 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'writerX@example.com', 0, NULL, 'passWriter', NULL, 'writerX')";
+                stmt.executeUpdate(insertCustomerSQL2);
+                // Recuperar el último valor de clave generada
+                String identityQuery2 = "SELECT id FROM " + schema + ".CUSTOMER WHERE username = 'writerX'";
+                ResultSet rs2 = stmt.executeQuery(identityQuery2);
+                Long customerid2 = null;
+
+                if (rs2.next()) {
+                    customerid2 = rs2.getLong(1);
+                }
+
+                out.println("<pre>Generated topic ID: " + customerid2 + "</pre>");
+                String insertCommentSQL2 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about Java programming...', NULL, 1, NULL, 'Summary of Java programming', 'Introduction to Java', 'Databases', 'Programming', 0, " + customerid2 + ")";
+                stmt.executeUpdate(insertCommentSQL2);
+                out.println("<pre> -> " + insertCommentSQL2 + "</pre>");
+                
+                String insertCustomerSQL3 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'carmanyola@example.com', 0, NULL, 'carmanyola', NULL, 'Carmanyola')";
+                stmt.executeUpdate(insertCustomerSQL3);
+                // Recuperar el último valor de clave generada
+                String identityQuery3 = "SELECT id FROM " + schema + ".CUSTOMER WHERE username = 'Carmanyola'";
+                ResultSet rs3 = stmt.executeQuery(identityQuery3);
+                Long customerid3 = null;
+
+                if (rs3.next()) {
+                    customerid3 = rs3.getLong(1);
+                }
+
+                out.println("<pre>Generated topic ID: " + customerid3 + "</pre>");
+                String insertCommentSQL3 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Learn about HTML, CSS, and JavaScript...', NULL, 1, NULL, 'Quick start guide to web development', 'Web Development Basics', 'Computer Science', 'Programming', 0, " + customerid3 + ")";
+                stmt.executeUpdate(insertCommentSQL3);
+                out.println("<pre> -> " + insertCommentSQL3 + "</pre>");
+                
                 // Cerrar la conexión a la base de datos
                 stmt.close();
-                con.close();
+                connection.close();
+
 
             } catch (Exception e) {
                 out.println("<span class='error'>Error: " + e.getMessage() + "</span>");

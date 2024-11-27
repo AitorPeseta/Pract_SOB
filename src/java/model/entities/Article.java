@@ -22,8 +22,8 @@ import jakarta.persistence.*;
         name = "Article.findByAuthorAndTopics",
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
                 "AND (:author IS NULL OR a.author.username = :author) " +
-                "AND ((:topic1 IS NULL OR :topic1 MEMBER OF a.topics) " +
-                "AND (:topic2 IS NULL OR :topic2 MEMBER OF a.topics)) " +
+                "AND ((:topic1 IS NULL OR :topic1 = a.topic1 OR :topic1 = a.topic2) " +
+                "AND (:topic2 IS NULL OR :topic2 = a.topic1 OR :topic2 = a.topic2)) " +
                 "ORDER BY a.views DESC"
     ),
     @NamedQuery(
@@ -52,15 +52,15 @@ public class Article implements Serializable {
     
     private String title;
     
-    private Integer views = 0;
+    private Integer views;
+    
+    private String topic1;
+    
+    private String topic2;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "autor_id", nullable = false)
     private Customer author;
-    
-    @ElementCollection
-    @Column(name = "topic")
-    private List<String> topics;
 
     public int getId() {
         return id;
@@ -89,17 +89,21 @@ public class Article implements Serializable {
     public String getTitle() {
         return title;
     }
-
+    
+    public String getTopic1() {
+        return topic1;
+    }
+    
+    public String getTopic2() {
+        return topic2;
+    }
+    
     public Integer getViews() {
         return views;
     }
     
     public Customer getAuthor() {
         return author;
-    }
-
-    public List<String> getTopics() {
-        return topics;
     }
 
     public void setId(int id) {
@@ -130,16 +134,20 @@ public class Article implements Serializable {
         this.title = title;
     }
     
+    public void setTopic1(String topics) {
+        this.topic1 = topics;
+    }
+    
+    public void setTopic2(String topics) {
+        this.topic2 = topics;
+    }
+
     public void setViews(Integer views) {
         this.views = views;
     }
-
+    
     public void setAuthor(Customer author) {
         this.author = author;
-    }
-
-    public void setTopics(List<String> topics) {
-        this.topics = topics;
     }
 
     @Override
@@ -166,7 +174,7 @@ public class Article implements Serializable {
 
     @Override
     public String toString() {
-        return "Article{" + "id=" + id + ", title=" + title + ", content=" + content + ", summary=" + summary + ", author=" + author + ", publishedDate=" + publishedDate + ", topics=" + topics + ", isPublic=" + isPublic + ", views=" + views + ", featuredImageUrl=" + featuredImageUrl + '}';
+        return "Article{" + "id=" + id + ", title=" + title + ", content=" + content + ", summary=" + summary + ", author=" + author + ", publishedDate=" + publishedDate + ", topic1=" + topic1 + ", topic2=" + topic2 + ", isPublic=" + isPublic + ", views=" + views + ", featuredImageUrl=" + featuredImageUrl + '}';
     }
     
      public Integer getPopularity(){
