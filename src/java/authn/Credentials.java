@@ -5,25 +5,29 @@ import jakarta.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
-@NamedQuery(name="Credentials.findUser", 
-            query="SELECT c FROM Credentials c WHERE c.username = :username")
+@NamedQueries({
+    @NamedQuery(name="Credentials.findUser", 
+                query="SELECT c FROM Credentials c WHERE c.username = :username"),
+    @NamedQuery(name="Credentials.findId", 
+                query="SELECT c.id FROM Credentials c WHERE c.username = :username")
+})
 @XmlRootElement
 public class Credentials implements Serializable { 
     @Id
     @SequenceGenerator(name="Credentials_Gen", allocationSize=1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Credentials_Gen") 
-    private Long id;
+    private int id;
     @Column(unique=true)
     @NotNull(message="Username can't be null")
     private String username;
     @NotNull(message="Password can't be null")
     private String password;
 
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 

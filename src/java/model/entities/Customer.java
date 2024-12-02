@@ -1,5 +1,7 @@
 package model.entities;
 
+import authn.Credentials;
+import jakarta.json.bind.annotation.JsonbTransient;
 import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,18 +12,19 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 import java.util.List;
 import jakarta.persistence.*;
+import jakarta.security.enterprise.credential.Credential;
 
 @XmlRootElement
 @Entity
 @NamedQueries({
     @NamedQuery(
         name = "Customer.findAllWithoutSensitiveData",
-        query = "SELECT NEW model.entities.Customer(c.id, c.username, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
+        query = "SELECT NEW model.entities.Customer(c.id, c.credenciales, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
                 "FROM Customer c"
     ),
     @NamedQuery(
         name = "Customer.findCustomerWithoutSensitiveData",
-        query = "SELECT NEW model.entities.Customer(c.id, c.username, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
+        query = "SELECT NEW model.entities.Customer(c.id, c.credenciales, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
                 "FROM Customer c WHERE c.id = :id" 
     ),
     @NamedQuery(
@@ -36,23 +39,26 @@ public class Customer implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Customer_Gen") 
     private int id;
     
+    @JoinColumn(name = "Credentials_id", nullable = false)
+    private Credentials credenciales;
+
     private String email;
     
     private Boolean isAuthor;
     
     private Long lastArticleId; // Para HATEOAS
-    
-    private String password;
-    
+        
     private Date registrationDate = new Date();
-
-    private String username;
        
     @OneToMany(mappedBy = "author", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<Article> articles;
   
     public int getId() {
         return id;
+    }
+    
+    public Credentials getCredenciales() {
+        return credenciales;
     }
 
     public String getEmail() {
@@ -67,24 +73,21 @@ public class Customer implements Serializable {
         return lastArticleId;
     }
     
-    public String getPassword() {
-        return password;
-    }
-    
     public Date getRegistrationDate() {
         return registrationDate;
     }
-    
-    public String getUsername() {
-        return username;
-    }
 
+    @JsonbTransient
     public List<Article> getArticles() {
         return articles;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+    
+    public void setCredentials(Credentials credentials) {
+        this.credenciales = credentials;
     }
     
     public void setEmail(String email) {
@@ -98,19 +101,12 @@ public class Customer implements Serializable {
     public void setLastArticleId(Long lastArticleId) {
         this.lastArticleId = lastArticleId;
     }
-    
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     public void setRegistrationDate(Date registrationDate) {
         this.registrationDate = registrationDate;
     }
-    
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
+    @JsonbTransient
     public void setArticles(Article articles) {
         this.articles.add(articles);
     }
@@ -136,10 +132,10 @@ public class Customer implements Serializable {
         final Customer other = (Customer) obj;
         return this.id == other.id;
     }
-
+    
     @Override
     public String toString() {
-        return "Customer{" + "id=" + id + ", username=" + username + ", password=" + password + ", email=" + email + ", isAuthor=" + isAuthor + ", lastArticleId=" + lastArticleId + ", registrationDate=" + registrationDate + ", articles=" + articles + '}';
+        return "Customer{" + "id=" + id + ", credenciales=" + credenciales + ", email=" + email + ", isAuthor=" + isAuthor + ", lastArticleId=" + lastArticleId + ", registrationDate=" + registrationDate + ", articles=" + articles + '}';
     }
     
      public static long getSerialVersionUID() {
@@ -151,11 +147,19 @@ public class Customer implements Serializable {
     
     //Constructor sin datos confidenciales
     public Customer(int id, String username, String email, Boolean isAuthor, Long lastArticleId, Date registrationDate) {
-    this.id = id;
-    this.username = username;
-    this.email = email;
-    this.isAuthor = isAuthor;
-    this.lastArticleId = lastArticleId;
-    this.registrationDate = registrationDate;
+        EntityManager em = null;
+        this.id = id;
+        this.email = email;
+        this.isAuthor = isAuthor;
+        this.lastArticleId = lastArticleId;
+        this.registrationDate = registrationDate;
+        Credentials credential = new Credentials();
+        credential.setUsername(username);
+        TypedQuery<Credentials> query = em.createNamedQuery("Credentials.findId", Credentials.class);
+        int id2 = query.getFirstResult();
+        credential.setId(id2); 
+        
     }
+    
 }
+

@@ -18,6 +18,7 @@ import jakarta.ws.rs.ext.Provider;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.container.ResourceInfo;
+import model.entities.Article;
 
 
 /**
@@ -40,6 +41,10 @@ public class RESTRequestFilter implements ContainerRequestFilter {
         Method method = resourceInfo.getResourceMethod();
         if (method != null) 
         {
+            if ((method.getName().equalsIgnoreCase("getArticleId") && (comprovaPrivat())) || (method.getName().equalsIgnoreCase("deleteArticle") && (comprovaAutor()))) {
+         // Fer la comprovació de si  l'article és privat o no amb JPQL; i si ho és, fer l'autentificació.
+            
+
             Secured secured = method.getAnnotation(Secured.class);
             if(secured != null)
             {
@@ -87,5 +92,20 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                 }
             }
         }
+    }
+}
+
+    private boolean comprovaPrivat() {
+        boolean esPrivat = em.createNamedQuery("Article.isPrivate", Article.class).setParameter("id",id).getSingleResult();
+        //TODO
+        
+        return esPrivat;  
+    }
+
+    private boolean comprovaAutor() {
+        boolean esAutor = false;
+        //TODO
+        
+        return esAutor;
     }
 }

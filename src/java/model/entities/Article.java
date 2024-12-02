@@ -1,5 +1,6 @@
 package model.entities;
 
+import jakarta.json.bind.annotation.JsonbTransient;
 import java.io.Serializable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,7 +22,7 @@ import jakarta.persistence.*;
     @NamedQuery(
         name = "Article.findByAuthorAndTopics",
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
-                "AND (:author IS NULL OR a.author.username = :author) " +
+                "AND (:author IS NULL OR a.author.credenciales.username = :author) " +
                 "AND ((:topic1 IS NULL OR :topic1 = a.topic1 OR :topic1 = a.topic2) " +
                 "AND (:topic2 IS NULL OR :topic2 = a.topic1 OR :topic2 = a.topic2)) " +
                 "ORDER BY a.views DESC"
@@ -29,6 +30,10 @@ import jakarta.persistence.*;
     @NamedQuery(
             name = "Article.findArticleId",
             query = "SELECT a FROM Article a WHERE a.id = :id"
+    ),
+    @NamedQuery(
+            name = "Article.isPublic",
+            query = "SELECT a.isPublic FROM Article a WHERE a.id = :id"
     )
 })
 public class Article implements Serializable {
@@ -102,6 +107,7 @@ public class Article implements Serializable {
         return views;
     }
     
+    @JsonbTransient
     public Customer getAuthor() {
         return author;
     }
@@ -146,6 +152,7 @@ public class Article implements Serializable {
         this.views = views;
     }
     
+    @JsonbTransient
     public void setAuthor(Customer author) {
         this.author = author;
     }

@@ -21,7 +21,7 @@ import java.util.Date;
 
 
 
-@Path("/rest/api/v1/customer")
+@Path("customer")
 
 /**
  *
@@ -54,7 +54,7 @@ Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya 
         List<CustomerResponse> customerResponses = customers.stream()
             .map(customer -> new CustomerResponse(
                 customer.getId(),
-                customer.getUsername(),
+                customer.getCredenciales().getUsername(),
                 customer.getEmail(),
                 customer.getIsAuthor(),
                 customer.getLastArticleId() != null 
@@ -151,13 +151,13 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
             return Response.status(Response.Status.NOT_FOUND).entity("Cliente no encontrado.").build();
         }
 
-        String authenticatedUsername = updatedCustomer.getUsername();
-        if (!authenticatedUsername.equals(currentCustomer.getUsername())) {
+        String authenticatedUsername = updatedCustomer.getCredenciales().getUsername();
+        if (!authenticatedUsername.equals(currentCustomer.getCredenciales().getUsername())) {
             return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para modificar este cliente.").build();
         }
 
         // Actualizar los campos permitidos del cliente
-        currentCustomer.setUsername(updatedCustomer.getUsername());
+        currentCustomer.getCredenciales().setUsername(updatedCustomer.getCredenciales().getUsername());
         currentCustomer.setEmail(updatedCustomer.getEmail());
         currentCustomer.setIsAuthor(updatedCustomer.getIsAuthor());
         currentCustomer.setRegistrationDate(updatedCustomer.getRegistrationDate());

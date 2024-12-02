@@ -21,8 +21,9 @@ import java.security.Principal;
 import javax.annotation.security.RolesAllowed;
 import java.util.Calendar;
 import java.util.Date;
+import model.entities.Topic;
 
-@Path("/rest/api/v1/article")
+@Path("article")
 
 
 /**
@@ -67,12 +68,22 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
         }
 
         // Caso 2: Filtros aplicados, usar findByAuthorAndTopics
-        TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthorAndTopics", Article.class);
+        TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthor", Article.class);
+        TypedQuery<Topic> query2 = em.createNamedQuery("Topic.existTopic", Topic.class);
+        TypedQuery<Topic> query3 = em.createNamedQuery("Topic.existTopic", Topic.class);
+
+        query2.setParameter("topic1", topics != null && !topics.isEmpty() ? topics.get(0) : null);
+        query3.setParameter("topic2", topics != null && topics.isEmpty() ? topics.get(1) : null);
         
+        int num1 = query2.getFirstResult();
+        int num2 = query3.getFirstResult();
+        
+        if(num1 == 0 || num2 == 0 ) return Response.noContent().build(); 
+            
         // Asignación de parámetros, si no existen se asigna a null para no aplicarlos en la consulta
         query.setParameter("author", author != null && !author.isEmpty() ? author : null);
         query.setParameter("topic1", topics != null && !topics.isEmpty() ? topics.get(0) : null);
-        query.setParameter("topic2", topics != null && topics.size() > 1 ? topics.get(1) : null);
+        query.setParameter("topic2", topics != null && topics.isEmpty() ? topics.get(1) : null);
 
         List<Article> articles = query.getResultList();
         return Response.ok(articles).build();
@@ -96,6 +107,7 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     @Produces(MediaType.APPLICATION_JSON)
     public Response getArticleId(@PathParam("id") int id){
         
+        
         // Obtener el artículo de la base de datos usando su ID
         Article article = em.createNamedQuery("Article.findArticleId", Article.class).setParameter("id",id).getSingleResult();
         
@@ -103,11 +115,9 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
             return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
         }
 
-        // Verificar si el artículo es privado y el usuario no está autenticado
+        // Verificar si el artículo es privado
         if (!article.getIsPublic()) {
-            
-                return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
-            
+            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
         }
 
         // Incrementar el contador de vistas
@@ -137,8 +147,8 @@ Opcional! Esborra l'article amb identificador ${id} del sistema.Per aquesta oper
         }
 
         // Verificar que el usuario autenticado es el autor del artículo
-        String username = article.getAuthor().getUsername(); // supondremos que este es el nombre del usuario autenticado
-        if (!article.getAuthor().getUsername().equals(username)) {
+        String username = article.getAuthor().getCredenciales().getUsername(); // supondremos que este es el nombre del usuario autenticado
+        if (!article.getAuthor().getCredenciales().getUsername().equals(username)) {
             return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para eliminar este artículo.").build();
         }
 
