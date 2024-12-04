@@ -33,21 +33,48 @@
                 // Conectar a la base de datos
                 Connection connection = DriverManager.getConnection("jdbc:derby://localhost:1527/" + dbname, "root", "root");
                 Statement stmt = connection.createStatement();
+                
+                
+                String insertCred = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN, 'sob', 'sob')";
+                stmt.executeUpdate(insertCred);
+                
+                out.println("<pre> -> " + insertCred + "</pre>");
+                
+                String insertTopic1 = "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Computer Science')";
+                stmt.executeUpdate(insertTopic1);
+                String idTopic1 = "SELECT id FROM " + schema + ".TOPIC WHERE name = 'Computer Science'";
+                ResultSet rst1 = stmt.executeQuery(idTopic1);
+                Long topicid1 = null;
 
-               String data[] = new String[]{
-                    "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN, 'sob', 'sob')",
-                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Computer Science')",
-                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Databases')",
-                    "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Programming')"
-                };
-
-                for (String datum : data) {
-                    if (stmt.executeUpdate(datum) <= 0) {
-                        out.println("<span class='error'>Error inserting data: " + datum + "</span>");
-                        return;
-                    }
-                    out.println("<pre> -> " + datum + "</pre>");
+                if (rst1.next()) {
+                    topicid1 = rst1.getLong(1);
                 }
+                
+                out.println("<pre> -> " + insertTopic1 + "</pre>");
+                
+                String insertTopic2 = "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Databases')";
+                stmt.executeUpdate(insertTopic2);
+                String idTopic2 = "SELECT id FROM " + schema + ".TOPIC WHERE name = 'Databases'";
+                ResultSet rst2 = stmt.executeQuery(idTopic2);
+                Long topicid2 = null;
+
+                if (rst2.next()) {
+                    topicid2 = rst2.getLong(1);
+                }
+                
+                out.println("<pre> -> " + insertTopic2 + "</pre>");
+                
+                String insertTopic3 = "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Programming')";
+                stmt.executeUpdate(insertTopic3);
+                String idTopic3 = "SELECT id FROM " + schema + ".TOPIC WHERE name = 'Programming'";
+                ResultSet rst3 = stmt.executeQuery(idTopic3);
+                Long topicid3 = null;
+
+                if (rst3.next()) {
+                    topicid3 = rst3.getLong(1);
+                }
+                
+                out.println("<pre> -> " + insertTopic3 + "</pre>");
                 
                 String insertCredentialsCustomerSQL1 = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN, 'abc', 'abc')";
                 stmt.executeUpdate(insertCredentialsCustomerSQL1);
@@ -70,8 +97,15 @@
                 }
 
                 out.println("<pre>Generated topic ID: " + customerid1 + "</pre>");
-                String insertCommentSQL1 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about databases...', NULL, 1, NULL, 'A brief overview of databases', 'Understanding Databases', 'Computer Science', 'Databases', 0, " + customerid1 + ")";
+                String insertCommentSQL1 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about databases...', NULL, 1, NULL, 'A brief overview of databases', 'Understanding Databases', 0, " + customerid1 + ")";   //Topics . 'Computer Science', 'Databases',
                 stmt.executeUpdate(insertCommentSQL1);
+                String idArticle1 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Understanding Databases'";
+                ResultSet rsa1 = stmt.executeQuery(idArticle1);
+                Long articleid1 = null;
+
+                if (rsa1.next()) {
+                    articleid1 = rsa1.getLong(1);
+                }
                 out.println("<pre> -> " + insertCommentSQL1 + "</pre>");
                
                 String insertCredentialsCustomerSQL2 = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN,'passWriter','writerX')";
@@ -97,9 +131,17 @@
                 }
 
                 out.println("<pre>Generated topic ID: " + customerid2 + "</pre>");
-                String insertCommentSQL2 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about Java programming...', NULL, 1, NULL, 'Summary of Java programming', 'Introduction to Java', 'Databases', 'Programming', 0, " + customerid2 + ")";
+                String insertCommentSQL2 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about Java programming...', NULL, 1, NULL, 'Summary of Java programming', 'Introduction to Java', 0, " + customerid2 + ")"; //topics : 'Databases', 'Programming'
                 stmt.executeUpdate(insertCommentSQL2);
+                String idArticle2 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Introduction to Java'";
+                ResultSet rsa2 = stmt.executeQuery(idArticle2);
+                Long articleid2 = null;
+
+                if (rsa2.next()) {
+                    articleid2 = rsa2.getLong(1);
+                }
                 out.println("<pre> -> " + insertCommentSQL2 + "</pre>");
+                out.println("<pre>Generated article ID: " + articleid2 + "</pre>");
                 
                 
                 String insertCredentialsCustomerSQL3 = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN,'carmanyola','Carmanyola')";
@@ -124,9 +166,46 @@
                 }
 
                 out.println("<pre>Generated topic ID: " + customerid3 + "</pre>");
-                String insertCommentSQL3 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Learn about HTML, CSS, and JavaScript...', NULL, 1, NULL, 'Quick start guide to web development', 'Web Development Basics', 'Computer Science', 'Programming', 0, " + customerid3 + ")";
+                String insertCommentSQL3 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Learn about HTML, CSS, and JavaScript...', NULL, 1, NULL, 'Quick start guide to web development', 'Web Development Basics', 0, " + customerid3 + ")"; //Topic : 'Programming'
                 stmt.executeUpdate(insertCommentSQL3);
+                String idArticle3 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Web Development Basics'";
+                ResultSet rsa3 = stmt.executeQuery(idArticle3);
+                Long articleid3 = null;
+
+                if (rsa3.next()) {
+                    articleid3 = rsa3.getLong(1);
+                }
                 out.println("<pre> -> " + insertCommentSQL3 + "</pre>");
+                
+                
+                String insertArticleTopic = "INSERT INTO " + schema + ".ARTICLE_TOPIC VALUES ("+articleid1+","+topicid1+")";
+                stmt.executeUpdate(insertArticleTopic);
+                
+                out.println("<pre> -> " + insertArticleTopic + "</pre>");
+                
+                insertArticleTopic = "INSERT INTO " + schema + ".ARTICLE_TOPIC VALUES ("+articleid1+","+topicid2+")";
+                stmt.executeUpdate(insertArticleTopic);
+                
+                out.println("<pre> -> " + insertArticleTopic + "</pre>");
+
+                
+                insertArticleTopic = "INSERT INTO " + schema + ".ARTICLE_TOPIC VALUES ("+articleid2+","+topicid2+")";
+                stmt.executeUpdate(insertArticleTopic);
+                
+                out.println("<pre> -> " + insertArticleTopic + "</pre>");
+                
+                insertArticleTopic = "INSERT INTO " + schema + ".ARTICLE_TOPIC VALUES ("+articleid2+","+topicid3+")";
+                stmt.executeUpdate(insertArticleTopic);
+                
+                out.println("<pre> -> " + insertArticleTopic + "</pre>");
+                
+                insertArticleTopic = "INSERT INTO " + schema + ".ARTICLE_TOPIC VALUES ("+articleid3+","+topicid3+")";
+                stmt.executeUpdate(insertArticleTopic);
+                
+                out.println("<pre> -> " + insertArticleTopic + "</pre>");
+                
+                
+                
                 
                 // Cerrar la conexión a la base de datos
                 stmt.close();

@@ -5,15 +5,22 @@
  */
 package model.entities;
 
+import jakarta.persistence.CascadeType;
 import java.io.Serializable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
 @XmlRootElement // Tanto el Comment como el topic deben tenerlo 
 @Entity
@@ -30,6 +37,10 @@ public class Topic implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Topic_Gen") 
     private Long id;
     private String name;
+    
+    @ManyToMany(mappedBy = "topics") // "topics" es el nombre del atributo en Article
+    private List<Article> articles;
+
 
     public String getName() {
         return name;
@@ -45,6 +56,10 @@ public class Topic implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public void setArticles(Article article){
+        this.articles.add(article);
     }
 
     @Override

@@ -23,8 +23,8 @@ import jakarta.persistence.*;
         name = "Article.findByAuthorAndTopics",
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
                 "AND (:author IS NULL OR a.author.credenciales.username = :author) " +
-                "AND ((:topic1 IS NULL OR :topic1 = a.topic1 OR :topic1 = a.topic2) " +
-                "AND (:topic2 IS NULL OR :topic2 = a.topic1 OR :topic2 = a.topic2)) " +
+                "AND ((:topic1 IS NULL OR :topic1 IN :topics) " +
+                "AND (:topic2 IS NULL OR :topic2 IN :topics)) " +
                 "ORDER BY a.views DESC"
     ),
     @NamedQuery(
@@ -34,6 +34,10 @@ import jakarta.persistence.*;
     @NamedQuery(
             name = "Article.isPublic",
             query = "SELECT a.isPublic FROM Article a WHERE a.id = :id"
+    ),
+    @NamedQuery(
+            name = "Article.findAuthor",
+            query = "SELECT a.author FROM Article a WHERE a.id = :id"
     )
 })
 public class Article implements Serializable {
@@ -59,9 +63,13 @@ public class Article implements Serializable {
     
     private Integer views;
     
-    private String topic1;
-    
-    private String topic2;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "article_topic",
+            joinColumns = @JoinColumn(name = "article_id"),
+            inverseJoinColumns = @JoinColumn(name = "topic_id")
+    )
+    private List<Topic> topics;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "autor_id", nullable = false)
@@ -95,12 +103,8 @@ public class Article implements Serializable {
         return title;
     }
     
-    public String getTopic1() {
-        return topic1;
-    }
-    
-    public String getTopic2() {
-        return topic2;
+    public List<Topic> getTopic() {
+        return this.topics;
     }
     
     public Integer getViews() {
@@ -140,12 +144,8 @@ public class Article implements Serializable {
         this.title = title;
     }
     
-    public void setTopic1(String topics) {
-        this.topic1 = topics;
-    }
-    
-    public void setTopic2(String topics) {
-        this.topic2 = topics;
+    public void setTopic(Topic topics) {
+        this.topics.add(topics);
     }
 
     public void setViews(Integer views) {
@@ -181,7 +181,7 @@ public class Article implements Serializable {
 
     @Override
     public String toString() {
-        return "Article{" + "id=" + id + ", title=" + title + ", content=" + content + ", summary=" + summary + ", author=" + author + ", publishedDate=" + publishedDate + ", topic1=" + topic1 + ", topic2=" + topic2 + ", isPublic=" + isPublic + ", views=" + views + ", featuredImageUrl=" + featuredImageUrl + '}';
+        return "Article{" + "id=" + id + ", title=" + title + ", content=" + content + ", summary=" + summary + ", author=" + author + ", publishedDate=" + publishedDate + ", topics=" + topics.toString() + ", isPublic=" + isPublic + ", views=" + views + ", featuredImageUrl=" + featuredImageUrl + '}';
     }
     
      public Integer getPopularity(){

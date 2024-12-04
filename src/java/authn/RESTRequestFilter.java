@@ -41,71 +41,73 @@ public class RESTRequestFilter implements ContainerRequestFilter {
         Method method = resourceInfo.getResourceMethod();
         if (method != null) 
         {
-            if ((method.getName().equalsIgnoreCase("getArticleId") && (comprovaPrivat())) || (method.getName().equalsIgnoreCase("deleteArticle") && (comprovaAutor()))) {
+            if ((method.getName().equalsIgnoreCase("getArticleId") && (comprovaPrivat(requestCtx))) || (method.getName().equalsIgnoreCase("deleteArticle") && (comprovaAutor(requestCtx)))) {
          // Fer la comprovació de si  l'article és privat o no amb JPQL; i si ho és, fer l'autentificació.
             
-
-            Secured secured = method.getAnnotation(Secured.class);
-            if(secured != null)
-            {
-                
-                List<String> headers = requestCtx.getHeaders()
-                        .get(HttpHeaders.AUTHORIZATION);
-                
-                if(headers != null && !headers.isEmpty())
+            
+                Secured secured = method.getAnnotation(Secured.class);
+                if(secured != null)
                 {
-                    String username;
-                    String password;
-                    try {
-                        String auth = headers.get(0);
-                        auth = auth.replace(AUTHORIZATION_HEADER_PREFIX, "");
-                        String decode = Base64.base64Decode(auth);
-                        StringTokenizer tokenizer = new StringTokenizer(decode, ":");
-                        username = tokenizer.nextToken();
-                        password = tokenizer.nextToken();
-                    } catch(@SuppressWarnings("unused") Exception e){
-                        requestCtx.abortWith(
-                                Response.status(Response.Status.BAD_REQUEST).build()
-                        );
-                        return;
-                    }
-                    
-                    try {
-                        TypedQuery<Credentials> query = em.createNamedQuery("Credentials.findUser", Credentials.class);
-                        Credentials c = query.setParameter("username", username)
-                            .getSingleResult();
-                        if(!c.getPassword().equals(password)) {
+
+                    List<String> headers = requestCtx.getHeaders()
+                            .get(HttpHeaders.AUTHORIZATION);
+
+                    if(headers != null && !headers.isEmpty())
+                    {
+                        String username;
+                        String password;
+                        try {
+                            String auth = headers.get(0);
+                            auth = auth.replace(AUTHORIZATION_HEADER_PREFIX, "");
+                            String decode = Base64.base64Decode(auth);
+                            StringTokenizer tokenizer = new StringTokenizer(decode, ":");
+                            username = tokenizer.nextToken();
+                            password = tokenizer.nextToken();
+                        } catch(@SuppressWarnings("unused") Exception e){
                             requestCtx.abortWith(
-                                Response.status(Response.Status.FORBIDDEN).build()
+                                    Response.status(Response.Status.BAD_REQUEST).build()
                             );
+                            return;
                         }
-                    } catch(@SuppressWarnings("unused") NoResultException e) {
-                        requestCtx.abortWith(
+
+                        try {
+                            TypedQuery<Credentials> query = em.createNamedQuery("Credentials.findUser", Credentials.class);
+                            Credentials c = query.setParameter("username", username)
+                                .getSingleResult();
+                            if(!c.getPassword().equals(password)) {
+                                requestCtx.abortWith(
+                                    Response.status(Response.Status.FORBIDDEN).build()
+                                );
+                            }
+                        } catch(@SuppressWarnings("unused") NoResultException e) {
+                            requestCtx.abortWith(
+                                Response.status(Response.Status.UNAUTHORIZED).build()
+                            );
+                        }                  
+                    }  
+                    else {
+                       requestCtx.abortWith(
                             Response.status(Response.Status.UNAUTHORIZED).build()
                         );
-                    }                  
-                }  
-                else {
-                   requestCtx.abortWith(
-                        Response.status(Response.Status.UNAUTHORIZED).build()
-                    );
+                    }
                 }
             }
         }
     }
-}
 
-    private boolean comprovaPrivat() {
-        boolean esPrivat = em.createNamedQuery("Article.isPrivate", Article.class).setParameter("id",id).getSingleResult();
-        //TODO
-        
+    private boolean comprovaPrivat(ContainerRequestContext requestCtx) {
+        String uri = requestCtx.getUriInfo().toString();
+        String[] cosas = uri.split("/");
+        String id = cosas[cosas.length];
+        boolean esPrivat = !em.createNamedQuery("Article.isPrivate", Article.class).setParameter("id",id).getSingleResult().getIsPublic();
         return esPrivat;  
     }
 
-    private boolean comprovaAutor() {
-        boolean esAutor = false;
-        //TODO
-        
-        return esAutor;
+    private boolean comprovaAutor(ContainerRequestContext requestCtx) {
+        String uri = requestCtx.getUriInfo().toString();
+        String[] cosas = uri.split("/");
+        String id = cosas[cosas.length];
+        boolean esAitor = (em.createNamedQuery("Article.findAuthor", Article.class).setParameter("id",id).getSingleResult()) != null;
+        return esAitor;
     }
 }
