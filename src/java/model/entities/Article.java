@@ -20,12 +20,20 @@ import jakarta.persistence.*;
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE ORDER BY a.views DESC"
     ),
     @NamedQuery(
-        name = "Article.findByAuthorAndTopics",
-        query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
-                "AND (:author IS NULL OR a.author.credenciales.username = :author) " +
-                "AND ((:topic1 IS NULL OR :topic1 IN :topics) " +
-                "AND (:topic2 IS NULL OR :topic2 IN :topics)) " +
-                "ORDER BY a.views DESC"
+    name = "Article.findByAuthorAndTopics",
+    query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
+            "AND (:author IS NULL OR a.author.id = :author) " +
+            "AND ((:topic1Id IS NULL OR EXISTS (SELECT t.id FROM a.topics t )) " +
+            "AND (:topic2Id IS NULL OR EXISTS (SELECT t.id FROM a.topics t ))) " +
+            "ORDER BY a.views DESC"
+    ),
+    @NamedQuery(
+    name = "Article.findByAuthorAndTopics2",
+    query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
+            "AND (a.author.id = :author) " +
+            "AND ((:topic1Id IN (SELECT t.id FROM a.topics t )) " +
+            "AND (:topic2Id IN (SELECT t.id FROM a.topics t ))) " +
+            "ORDER BY a.views DESC"
     ),
     @NamedQuery(
             name = "Article.findArticleId",
@@ -52,7 +60,7 @@ public class Article implements Serializable {
     
     private String featuredImageUrl;
     
-    private Boolean isPublic;
+    private boolean isPublic;
     
     @Temporal(TemporalType.TIMESTAMP)
     private Date publishedDate = new Date();
@@ -63,6 +71,10 @@ public class Article implements Serializable {
     
     private Integer views;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "autor_id", referencedColumnName = "id")
+    private Customer author;
+    
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "article_topic",
@@ -70,10 +82,6 @@ public class Article implements Serializable {
             inverseJoinColumns = @JoinColumn(name = "topic_id")
     )
     private List<Topic> topics;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "autor_id", nullable = false)
-    private Customer author;
 
     public int getId() {
         return id;
@@ -87,7 +95,7 @@ public class Article implements Serializable {
         return featuredImageUrl;
     }
     
-    public Boolean getIsPublic() {
+    public boolean getIsPublic() {
         return isPublic;
     }
 
@@ -103,17 +111,16 @@ public class Article implements Serializable {
         return title;
     }
     
-    public List<Topic> getTopic() {
-        return this.topics;
-    }
-    
     public Integer getViews() {
         return views;
     }
     
-    @JsonbTransient
     public Customer getAuthor() {
         return author;
+    }
+    
+    public List<Topic> getTopic() {
+        return this.topics;
     }
 
     public void setId(int id) {
@@ -143,18 +150,17 @@ public class Article implements Serializable {
     public void setTitle(String title) {
         this.title = title;
     }
-    
-    public void setTopic(Topic topics) {
-        this.topics.add(topics);
-    }
 
     public void setViews(Integer views) {
         this.views = views;
     }
     
-    @JsonbTransient
     public void setAuthor(Customer author) {
         this.author = author;
+    }
+    
+    public void setTopic(List<Topic> topics) {
+        this.topics = topics;
     }
 
     @Override

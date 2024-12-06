@@ -26,8 +26,16 @@ import java.util.List;
 @Entity
 @NamedQueries({
     @NamedQuery(
-        name = "Topis.existTopic",
+        name = "Topic.existTopic",
         query = "SELECT COUNT(t) FROM Topic t WHERE t.id = :id "
+    ),
+    @NamedQuery(
+        name = "Topic.getName",
+        query = "SELECT t.name FROM Topic t WHERE t.id = :id "
+    ),
+    @NamedQuery(
+        name = "Topic.getArticles",
+        query = "SELECT t.articles FROM Topic t WHERE t.id = :id "
     )
 })
 public class Topic implements Serializable {
@@ -58,8 +66,8 @@ public class Topic implements Serializable {
         this.id = id;
     }
     
-    public void setArticles(Article article){
-        this.articles.add(article);
+    public void setArticles(List<Article> article){
+        this.articles = article;
     }
 
     @Override

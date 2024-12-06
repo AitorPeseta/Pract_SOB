@@ -1,6 +1,7 @@
 package model.entities;
 
 import authn.Credentials;
+import jakarta.json.bind.annotation.JsonbProperty;
 import jakarta.json.bind.annotation.JsonbTransient;
 import java.io.Serializable;
 import jakarta.persistence.Entity;
@@ -38,17 +39,18 @@ public class Customer implements Serializable {
     @SequenceGenerator(name="Customer_Gen", allocationSize=1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Customer_Gen") 
     private int id;
-    
-    @JoinColumn(name = "Credentials_id", nullable = false)
-    private Credentials credenciales;
 
     private String email;
     
-    private Boolean isAuthor;
+    private boolean isAuthor;
     
     private Long lastArticleId; // Para HATEOAS
         
     private Date registrationDate = new Date();
+    
+    @OneToOne
+    @JoinColumn(name = "credentials_id", referencedColumnName = "id")
+    private Credentials credenciales;
        
     @OneToMany(mappedBy = "author", cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     private List<Article> articles;
@@ -56,16 +58,12 @@ public class Customer implements Serializable {
     public int getId() {
         return id;
     }
-    
-    public Credentials getCredenciales() {
-        return credenciales;
-    }
 
     public String getEmail() {
         return email;
     }
     
-    public Boolean getIsAuthor() {
+    public boolean getIsAuthor() {
         return isAuthor;
     }
     
@@ -76,6 +74,10 @@ public class Customer implements Serializable {
     public Date getRegistrationDate() {
         return registrationDate;
     }
+    
+    public Credentials getCredenciales() {
+        return credenciales;
+    }
 
     @JsonbTransient
     public List<Article> getArticles() {
@@ -84,10 +86,6 @@ public class Customer implements Serializable {
 
     public void setId(int id) {
         this.id = id;
-    }
-    
-    public void setCredentials(Credentials credentials) {
-        this.credenciales = credentials;
     }
     
     public void setEmail(String email) {
@@ -104,6 +102,10 @@ public class Customer implements Serializable {
 
     public void setRegistrationDate(Date registrationDate) {
         this.registrationDate = registrationDate;
+    }
+    
+    public void setCredentials(Credentials credentials) {
+        this.credenciales = credentials;
     }
 
     @JsonbTransient
@@ -141,25 +143,17 @@ public class Customer implements Serializable {
      public static long getSerialVersionUID() {
         return serialVersionUID;
     }
-
-    public Customer() {
-    }
-    
     //Constructor sin datos confidenciales
-    public Customer(int id, String username, String email, Boolean isAuthor, Long lastArticleId, Date registrationDate) {
-        EntityManager em = null;
+    public Customer(int id, Credentials credenciales, String email, boolean isAuthor, Long lastArticleId, Date registrationDate) {
         this.id = id;
         this.email = email;
         this.isAuthor = isAuthor;
         this.lastArticleId = lastArticleId;
         this.registrationDate = registrationDate;
-        Credentials credential = new Credentials();
-        credential.setUsername(username);
-        TypedQuery<Credentials> query = em.createNamedQuery("Credentials.findId", Credentials.class);
-        int id2 = query.getFirstResult();
-        credential.setId(id2); 
-        
+        this.credenciales = credenciales; 
     }
+    
+    public Customer(){}
     
 }
 

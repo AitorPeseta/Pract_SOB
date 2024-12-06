@@ -9,6 +9,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
@@ -52,38 +53,37 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getArticles(@QueryParam("topic") List<String> topics,
-                                @QueryParam("author") String author) {
-        // Verificación del número de topics
-        if (topics != null && topics.size() > 2) {
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity("No se pueden especificar más de dos topics.").build();
-        }
-
+    public Response getArticles(@QueryParam("topic1") int topicid1,
+                                @QueryParam("topic2") int topicid2,
+                                @QueryParam("author") int author) {
+        
         // Caso 1: No hay filtros, usar findAllPublic
-        if ((topics == null || topics.isEmpty()) && (author == null || author.isEmpty())) {
+        if ((topicid1 == 0 && topicid2 == 0) && (author == 0)) {
             TypedQuery<Article> query = em.createNamedQuery("Article.findAllPublic", Article.class);
             List<Article> articles = query.getResultList();
             return Response.ok(articles).build();
         }
 
         // Caso 2: Filtros aplicados, usar findByAuthorAndTopics
-        TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthor", Article.class);
-        TypedQuery<Topic> query2 = em.createNamedQuery("Topic.existTopic", Topic.class);
-        TypedQuery<Topic> query3 = em.createNamedQuery("Topic.existTopic", Topic.class);
-
-        query2.setParameter("topic1", topics != null && !topics.isEmpty() ? topics.get(0) : null);
-        query3.setParameter("topic2", topics != null && topics.isEmpty() ? topics.get(1) : null);
+        TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthorAndTopics", Article.class);
+        TypedQuery<Long> query2 = em.createNamedQuery("Topic.existTopic", Long.class);
+        TypedQuery<Long> query3 = em.createNamedQuery("Topic.existTopic", Long.class);
         
-        int num1 = query2.getFirstResult();
-        int num2 = query3.getFirstResult();
+        query2.setParameter("id", topicid1 != 0 ? topicid1 : null);
+        query3.setParameter("id", topicid2 != 0 ? topicid2 : null);
+        
+        Long num1 = (Long) query2.getSingleResult();
+        Long num2 = (Long) query3.getSingleResult();
         
         if(num1 == 0 || num2 == 0 ) return Response.noContent().build(); 
-            
+        
+        Long topicid1L = Long.valueOf(topicid1);
+        Long topicid2L = Long.valueOf(topicid2);
+ 
         // Asignación de parámetros, si no existen se asigna a null para no aplicarlos en la consulta
-        query.setParameter("author", author != null && !author.isEmpty() ? author : null);
-        query.setParameter("topic1", topics != null && !topics.isEmpty() ? topics.get(0) : null);
-        query.setParameter("topic2", topics != null && topics.isEmpty() ? topics.get(1) : null);
+        query.setParameter("author", author != 0 ? author : null);
+        query.setParameter("topic1Id", topicid1L != 0 ? topicid1L : null);
+        query.setParameter("topic2Id", topicid2L != 0 ? topicid2L : null);
 
         List<Article> articles = query.getResultList();
         return Response.ok(articles).build();
@@ -102,7 +102,6 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     
     @GET
     @Path("/{id}")
-    @Transactional
     @Secured
     @Produces(MediaType.APPLICATION_JSON)
     public Response getArticleId(@PathParam("id") int id){
@@ -172,12 +171,28 @@ Per aquesta operació, cal que l'usuari estigui autentificat.
     @Secured
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
     public Response createArticle(Article article) {
         
-        em.persist(article);
+        try{
+            TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthorAndTopics", Article.class);
+            query.setParameter("author", article.getAuthor().getId() != 0 ? article.getAuthor().getId() : null);
+            query.setParameter("topic1Id", article.getTopic().get(0).getId() != 0 ? article.getTopic().get(0).getId() : null);
+            query.setParameter("topic2Id", article.getTopic().get(1).getId() != 0 ? article.getTopic().get(1).getId() : null);
+            Article article2 = query.getSingleResult();
+
+            em.persist(article);
+            //em.getTransaction().commit();
         
         return Response.status(Response.Status.CREATED)
                 .entity("Article created with ID: " + article.getId())
                 .build();
+        }catch (NoResultException e) {
+            // Manejo de caso donde no se encuentran resultados
+            return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontrado.").build();
+        } catch (Exception e) {
+            // Manejo de cualquier otro error inesperado
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error interno del servidor.").build();
+        }
     }
 }

@@ -96,18 +96,20 @@ public class RESTRequestFilter implements ContainerRequestFilter {
     }
 
     private boolean comprovaPrivat(ContainerRequestContext requestCtx) {
-        String uri = requestCtx.getUriInfo().toString();
+        String uri = requestCtx.getUriInfo().getRequestUri().toString();
         String[] cosas = uri.split("/");
-        String id = cosas[cosas.length];
-        boolean esPrivat = !em.createNamedQuery("Article.isPrivate", Article.class).setParameter("id",id).getSingleResult().getIsPublic();
-        return esPrivat;  
+        String id_String = cosas[cosas.length-1];
+        int id = Integer.parseInt(id_String);
+        boolean esPrivat = em.createNamedQuery("Article.isPublic", boolean.class).setParameter("id",id).getSingleResult();
+        return !esPrivat; 
     }
 
     private boolean comprovaAutor(ContainerRequestContext requestCtx) {
-        String uri = requestCtx.getUriInfo().toString();
+        /*String uri = requestCtx.getUriInfo().toString();
         String[] cosas = uri.split("/");
         String id = cosas[cosas.length];
         boolean esAitor = (em.createNamedQuery("Article.findAuthor", Article.class).setParameter("id",id).getSingleResult()) != null;
-        return esAitor;
+        return esAitor;*/
+        return true;
     }
 }

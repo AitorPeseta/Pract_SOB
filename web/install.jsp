@@ -107,6 +107,10 @@
                     articleid1 = rsa1.getLong(1);
                 }
                 out.println("<pre> -> " + insertCommentSQL1 + "</pre>");
+                
+                String updateCustomerSQL1 = "UPDATE " + schema + ".CUSTOMER SET lastArticleId = " + articleid1 + ", isAuthor = 1 WHERE id = " + customerid1 + "";
+                stmt.executeUpdate(updateCustomerSQL1);
+                out.println("<pre> -> " + updateCustomerSQL1 + "</pre>");
                
                 String insertCredentialsCustomerSQL2 = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN,'passWriter','writerX')";
                 stmt.executeUpdate(insertCredentialsCustomerSQL2);
@@ -143,6 +147,9 @@
                 out.println("<pre> -> " + insertCommentSQL2 + "</pre>");
                 out.println("<pre>Generated article ID: " + articleid2 + "</pre>");
                 
+                String updateCustomerSQL2 = "UPDATE " + schema + ".CUSTOMER SET lastArticleId = " + articleid2 + ", isAuthor = 1 WHERE id = " + customerid2 + "";
+                stmt.executeUpdate(updateCustomerSQL2);
+                out.println("<pre> -> " + updateCustomerSQL2 + "</pre>");
                 
                 String insertCredentialsCustomerSQL3 = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN,'carmanyola','Carmanyola')";
                 stmt.executeUpdate(insertCredentialsCustomerSQL3);
@@ -176,6 +183,10 @@
                     articleid3 = rsa3.getLong(1);
                 }
                 out.println("<pre> -> " + insertCommentSQL3 + "</pre>");
+                
+                String updateCustomerSQL3 = "UPDATE " + schema + ".CUSTOMER SET lastArticleId = " + articleid3 + ", isAuthor = 1 WHERE id = " + customerid3 + "";
+                stmt.executeUpdate(updateCustomerSQL3);
+                out.println("<pre> -> " + updateCustomerSQL3 + "</pre>");
                 
                 
                 String insertArticleTopic = "INSERT INTO " + schema + ".ARTICLE_TOPIC VALUES ("+articleid1+","+topicid1+")";
