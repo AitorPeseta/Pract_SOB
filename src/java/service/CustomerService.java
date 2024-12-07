@@ -47,7 +47,7 @@ Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya 
     private EntityManager em;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getAllCustomers() {
         // Usamos la Named Query para recuperar los datos
         List<Customer> customers = em.createNamedQuery("Customer.findAllWithoutSensitiveData", Customer.class)
@@ -83,7 +83,7 @@ Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya 
     
     @GET
     @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getCustomerId(@PathParam("id") String ids){
         int id;
         try{
@@ -126,18 +126,18 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
             return Response.status(Response.Status.NOT_FOUND).entity("Cliente no encontrado.").build();
         }
 
-        if (id != updatedCustomer.getId()) {
-            return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para modificar este cliente.").build();
+        if (id != updatedCustomer.getId() || currentCustomer.getCredenciales().getId() != updatedCustomer.getCredenciales().getId()) {
+            return Response.status(Response.Status.FORBIDDEN).entity("No se debe modificar el identificador.").build();
         }
 
         // Actualizar los campos permitidos del cliente
         currentCustomer.setEmail(updatedCustomer.getEmail());
         currentCustomer.setIsAuthor(updatedCustomer.getIsAuthor());
-        currentCustomer.setRegistrationDate(updatedCustomer.getRegistrationDate());
+        currentCustomer.setRegistrationDate(new Date());
         Credentials creds = updatedCustomer.getCredenciales();
             // Actualiza la relación de credenciales (si es necesario)
         if (creds != null) {
-            currentCustomer.setCredentials(creds);
+            currentCustomer.setCredenciales(creds);
         }
         
         // Guardar cambios en la base de datos

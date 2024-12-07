@@ -18,32 +18,32 @@ public class Credentials implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Credentials_Gen") 
     private int id;
     @Column(unique=true)
-    @NotNull(message="Username can't be null")
-    private String username;
     @NotNull(message="Password can't be null")
     private String password;
+    @NotNull(message="Username can't be null")
+    private String username;
 
     public int getId() {
         return id;
     }
 
+    public String getPassword() {
+        return password;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
     public void setId(int id) {
         this.id = id;
     }
-
-    public String getUsername() {
-        return username;
+    
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

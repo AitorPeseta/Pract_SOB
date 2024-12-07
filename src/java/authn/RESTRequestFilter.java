@@ -85,7 +85,7 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                         if(comprovaPrivat(requestCtx)){ //Si es article privat comprovem si es autor el que ho demana
                             if (!(comprovaAutor(requestCtx, username, password))){
                                 requestCtx.abortWith(
-                                    Response.status(Response.Status.UNAUTHORIZED).build()
+                                    Response.status(Response.Status.UNAUTHORIZED).entity("Access to the article is restricted to the owner.").build()
                                 );
                             }
                         }
@@ -93,7 +93,7 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                     if(method.getName().equalsIgnoreCase("deleteArticle")){
                         if (!(comprovaAutor(requestCtx, username, password))){
                             requestCtx.abortWith(
-                                Response.status(Response.Status.UNAUTHORIZED).build()
+                                Response.status(Response.Status.UNAUTHORIZED).entity("Access to delete the article is reserved to the owner.").build()
                             );
                         }
                     }

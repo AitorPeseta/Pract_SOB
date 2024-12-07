@@ -15,6 +15,7 @@ import jakarta.persistence.TypedQuery;
 import java.util.List;
 import model.entities.Article;
 import jakarta.transaction.Transactional;
+import java.util.Date;
 import model.entities.Customer;
 import model.entities.Topic;
 
@@ -46,7 +47,7 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
     private EntityManager em;
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getArticles(@QueryParam("topic") List<Integer>topics,
                                 @QueryParam("author") int author) {
         
@@ -104,7 +105,7 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     @GET
     @Path("/{id}")
     @Secured
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Transactional
     public Response getArticleId(@PathParam("id") String ids) {
         int id;
@@ -133,9 +134,9 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
         }
 
         // Verificar si el artículo es privado
-        if (!article.getIsPublic()) {
+        /*if (!article.getIsPublic()) {
             return Response.status(Response.Status.FORBIDDEN).entity("Access to the article is restricted.").build();
-        }
+        }*/
 
         // Incrementar el contador de vistas
         article.incrementViews();
@@ -204,24 +205,32 @@ Per aquesta operació, cal que l'usuari estigui autentificat.
     @POST
     @Secured
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Transactional
     public Response createArticle(Article article) {
-        if (article == null || article.getAuthor() == null || article.getTopic().isEmpty() || article.getTitle().isBlank()){
+        if (article == null || article.getAuthor() == null || article.getTopic().isEmpty() || article.getTitle() == null){
             return Response.status(Response.Status.BAD_REQUEST).entity("Introduce un artículo con autor y topicos").build();
+        } else if(article.getId() != 0){
+            return Response.status(Response.Status.BAD_REQUEST).entity("El artículo no debe tener ID").build();
         } else {
             try{
-                TypedQuery<Customer> query = em.createNamedQuery("Customer.existAuthor", Customer.class).setParameter("id", article.getAuthor().getId());
-                query.getFirstResult();
+                
+                TypedQuery<Long> query = em.createNamedQuery("Customer.existAuthor", Long.class).setParameter("id", article.getAuthor().getId());
+                Long authResult = query.getSingleResult();
+                Long topicResult = -1L;
+                if (authResult == 0) { return Response.status(Response.Status.NOT_FOUND).entity("Autor con ID "+article.getAuthor().getId()+" no existe.").build(); }
                 List<Topic> topics = article.getTopic();
                 for (Topic topic : topics) {
-                    TypedQuery<Topic> querytopic = em.createNamedQuery("Topic.existTopic", Topic.class).setParameter("id", topic.getId());
-                    querytopic.getFirstResult();
+                    TypedQuery<Long> querytopic = em.createNamedQuery("Topic.existTopic", Long.class).setParameter("id", topic.getId());
+                    topicResult = querytopic.getSingleResult();
+                    if (topicResult == 0) { return Response.status(Response.Status.NOT_FOUND).entity("Topico con ID "+topic.getId()+" no existe.").build(); }
                 }
                 em.persist(article);
+                article.setPublishedDate(new Date());
                 article.getAuthor().setLastArticleId((long)(article.getId()));
+                article.setViews(0);
                 em.merge(article);
-                return Response.status(Response.Status.CREATED).entity("Article created with ID: " + article.getId()).build();
+                return Response.status(Response.Status.CREATED).entity("Article created with ID: " + article.getId()+"Authid: "+article.getAuthor().getId()).build();
              }catch (NoResultException e) {
                  // Manejo de caso donde no se encuentran resultados
                  return Response.status(Response.Status.NOT_FOUND).entity("Autor o tópicos no existen.").build();

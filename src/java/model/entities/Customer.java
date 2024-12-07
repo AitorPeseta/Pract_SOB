@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 import jakarta.persistence.*;
 import jakarta.security.enterprise.credential.Credential;
+import jakarta.validation.constraints.NotNull;
 
 @XmlRootElement
 @Entity
@@ -48,7 +49,7 @@ public class Customer implements Serializable {
         
     private Date registrationDate = new Date();
     
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "credentials_id", referencedColumnName = "id")
     private Credentials credenciales;
        
@@ -104,7 +105,7 @@ public class Customer implements Serializable {
         this.registrationDate = registrationDate;
     }
     
-    public void setCredentials(Credentials credentials) {
+    public void setCredenciales(Credentials credentials) {
         this.credenciales = credentials;
     }
 
