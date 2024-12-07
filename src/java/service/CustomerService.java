@@ -11,6 +11,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Context;
@@ -83,14 +84,26 @@ Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya 
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getArticleId(@PathParam("id") int id){
-    
-        Customer customer = em.createNamedQuery("Customer.findCustomerWithoutSensitiveData", Customer.class).setParameter("id",id).getSingleResult();
-        
-        customer.getCredenciales().setPassword("null");
-        
-        if(customer == null) return Response.status(Response.Status.BAD_REQUEST).entity("Invalid id author").build();
-        else return Response.ok(customer).build();
+    public Response getCustomerId(@PathParam("id") String ids){
+        int id;
+        try{
+            id = Integer.parseInt(ids);
+        } catch (NumberFormatException e2){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce una ID numerica valida").build();
+        }
+        try{
+            if (id <= 0) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Invalid ID").build();
+            }
+            Customer customer = em.createNamedQuery("Customer.findCustomerWithoutSensitiveData", Customer.class).setParameter("id",id).getSingleResult();
+
+            customer.getCredenciales().setPassword("null");
+
+            if(customer == null) return Response.status(Response.Status.BAD_REQUEST).entity("Invalid id author").build();
+            else return Response.ok(customer).build();
+        }catch (NoResultException e){
+            return Response.status(Response.Status.NOT_FOUND).entity("Cliente no encontrado.").build();
+        }
       
     }
     

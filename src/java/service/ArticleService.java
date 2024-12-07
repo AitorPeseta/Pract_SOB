@@ -9,13 +9,14 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
 import model.entities.Article;
 import jakarta.transaction.Transactional;
+import model.entities.Customer;
+import model.entities.Topic;
 
 @Path("article")
 
@@ -48,6 +49,7 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
     @Produces(MediaType.APPLICATION_JSON)
     public Response getArticles(@QueryParam("topic") List<Integer>topics,
                                 @QueryParam("author") int author) {
+        
         
         TypedQuery<Article> query = null;
         if (topics.size()>2) { return Response.status(Response.Status.BAD_REQUEST).entity("Introduce como maximo 2 topics").build(); }
@@ -104,42 +106,41 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     @Secured
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public Response getArticleId(@PathParam("id") int id) {
-        try {
-            if (id <= 0) {
-                return Response.status(Response.Status.BAD_REQUEST).entity("Invalid ID").build();
-            }
+    public Response getArticleId(@PathParam("id") String ids) {
+        int id;
+        try{
+            id = Integer.parseInt(ids);
+        } catch (NumberFormatException e2){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce una ID numerica valida").build();
+        }
+        if (id <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid ID").build();
+        }
 
-            // Obtener el artículo de la base de datos usando su ID
-            Article article = null;
-            // Buscamos articulos en lista para ver si está vacia
-            TypedQuery<Article> query = em.createNamedQuery("Article.findArticleId", Article.class)
-                    .setParameter("id", id);
-            List<Article> result = query.getResultList();
+        // Obtener el artículo de la base de datos usando su ID
+        Article article;
+        // Buscamos articulos en lista para ver si está vacia
+        TypedQuery<Article> query = em.createNamedQuery("Article.findArticleId", Article.class)
+                .setParameter("id", id);
+        List<Article> result = query.getResultList();
 
-            if (result.isEmpty()) {
-                // Si la lista está vacía, significa que no se encontró el artículo
-                return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
-            } else {
-                // Si se encuentra, obtener el primer artículo de la lista
-                article = result.get(0);
-            }
+        if (result.isEmpty()) {
+            // Si la lista está vacía, significa que no se encontró el artículo
+            return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
+        } else {
+            // Si se encuentra, obtener el primer artículo de la lista
+            article = result.get(0);
+        }
 
-            // Verificar si el artículo es privado
-            if (!article.getIsPublic()) {
-                return Response.status(Response.Status.FORBIDDEN).entity("Access to the article is restricted.").build();
-            }
+        // Verificar si el artículo es privado
+        if (!article.getIsPublic()) {
+            return Response.status(Response.Status.FORBIDDEN).entity("Access to the article is restricted.").build();
+        }
 
-            // Incrementar el contador de vistas
-            article.incrementViews();
-            em.merge(article); // Persistir el cambio en la base de datos
-            return Response.ok(article).build();
-        } catch (Exception e) {
-            e.printStackTrace(); // Imprime el stack trace para obtener más detalles.
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity("An unexpected error occurred: " + e.toString())
-                    .build();
-        }// Manejo general de errores
+        // Incrementar el contador de vistas
+        article.incrementViews();
+        em.merge(article); // Persistir el cambio en la base de datos
+        return Response.ok(article).build();
     }
 
     
@@ -155,23 +156,38 @@ Opcional! Esborra l'article amb identificador ${id} del sistema.Per aquesta oper
     @Path("/{id}")
     @Secured
     @Transactional
-    public Response deleteArticle(@PathParam("id") int id) {
-
-        // Buscar el artículo en la base de datos
-        Article article = em.find(Article.class, id);
-        if (article == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontrado.").build();
+    public Response deleteArticle(@PathParam("id") String ids) {
+        int id;
+        try{
+            id = Integer.parseInt(ids);
+        } catch (NumberFormatException e2){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce una ID numerica valida").build();
         }
+        try{
+            if (id <= 0) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Invalid ID").build();
+            }
+            // Buscar el artículo en la base de datos
+            TypedQuery<Article> query = em.createNamedQuery("Article.findArticleId", Article.class)
+                        .setParameter("id", id);
+            List<Article> result = query.getResultList();
+            if (result.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontrado.").build();
+            }
+            Article article = result.get(0);
 
-        // Verificar que el usuario autenticado es el autor del artículo
-        String username = article.getAuthor().getCredenciales().getUsername(); // supondremos que este es el nombre del usuario autenticado
-        if (!article.getAuthor().getCredenciales().getUsername().equals(username)) {
-            return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para eliminar este artículo.").build();
+            // Verificar que el usuario autenticado es el autor del artículo
+            String username = article.getAuthor().getCredenciales().getUsername(); // supondremos que este es el nombre del usuario autenticado
+            if (!article.getAuthor().getCredenciales().getUsername().equals(username)) {
+                return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para eliminar este artículo.").build();
+            }
+
+            // Eliminar el artículo
+            em.remove(article);
+            return Response.noContent().build();
+        } catch (NumberFormatException e){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce una ID numerica").build();
         }
-
-        // Eliminar el artículo
-        em.remove(article);
-        return Response.noContent().build();
     }
     /**
      * POST/rest/api/v1/article
@@ -191,26 +207,30 @@ Per aquesta operació, cal que l'usuari estigui autentificat.
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Response createArticle(Article article) {
-        
-        try{
-            TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthorAndTopics", Article.class);
-            query.setParameter("author", article.getAuthor().getId() != 0 ? article.getAuthor().getId() : null);
-            query.setParameter("topic1Id", article.getTopic().get(0).getId() != 0 ? article.getTopic().get(0).getId() : null);
-            query.setParameter("topic2Id", article.getTopic().get(1).getId() != 0 ? article.getTopic().get(1).getId() : null);
-            //Article article2 = query.getSingleResult();
-
-            em.persist(article);
-            //em.getTransaction().commit();
-        
-        return Response.status(Response.Status.CREATED)
-                .entity("Article created with ID: " + article.getId())
-                .build();
-        }catch (NoResultException e) {
-            // Manejo de caso donde no se encuentran resultados
-            return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontrado.").build();
-        } catch (Exception e) {
-            // Manejo de cualquier otro error inesperado
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error interno del servidor.").build();
+        if (article == null || article.getAuthor() == null || article.getTopic().isEmpty() || article.getTitle().isBlank()){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce un artículo con autor y topicos").build();
+        } else {
+            try{
+                TypedQuery<Customer> query = em.createNamedQuery("Customer.existAuthor", Customer.class).setParameter("id", article.getAuthor().getId());
+                query.getFirstResult();
+                List<Topic> topics = article.getTopic();
+                for (Topic topic : topics) {
+                    TypedQuery<Topic> querytopic = em.createNamedQuery("Topic.existTopic", Topic.class).setParameter("id", topic.getId());
+                    querytopic.getFirstResult();
+                }
+                em.persist(article);
+                article.getAuthor().setLastArticleId((long)(article.getId()));
+                em.merge(article);
+                return Response.status(Response.Status.CREATED).entity("Article created with ID: " + article.getId()).build();
+             }catch (NoResultException e) {
+                 // Manejo de caso donde no se encuentran resultados
+                 return Response.status(Response.Status.NOT_FOUND).entity("Autor o tópicos no existen.").build();
+             } catch (Exception e) {
+                 e.printStackTrace();  // Asegúrate de ver los detalles de la excepción en los logs
+                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                         .entity("An unexpected error occurred: " + e.getMessage())
+                         .build();
+            }
         }
     }
 }

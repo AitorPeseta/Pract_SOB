@@ -76,7 +76,7 @@ public class Article implements Serializable {
     
     @Id
     @SequenceGenerator(name="Article_Gen", allocationSize=1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Article_Gen") 
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Article_Gen")
     private int id;
     
     private String content;
