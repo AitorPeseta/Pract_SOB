@@ -126,14 +126,14 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
             return Response.status(Response.Status.NOT_FOUND).entity("Cliente no encontrado.").build();
         }
 
-        if (id != updatedCustomer.getId() || currentCustomer.getCredenciales().getId() != updatedCustomer.getCredenciales().getId()) {
-            return Response.status(Response.Status.FORBIDDEN).entity("No se debe modificar el identificador.").build();
+        if (id != updatedCustomer.getId()) {
+            return Response.status(Response.Status.FORBIDDEN).entity("No tienes permisos para modificar este cliente.").build();
         }
 
         // Actualizar los campos permitidos del cliente
         currentCustomer.setEmail(updatedCustomer.getEmail());
         currentCustomer.setIsAuthor(updatedCustomer.getIsAuthor());
-        currentCustomer.setRegistrationDate(new Date());
+        currentCustomer.setRegistrationDate(updatedCustomer.getRegistrationDate());
         Credentials creds = updatedCustomer.getCredenciales();
             // Actualiza la relación de credenciales (si es necesario)
         if (creds != null) {

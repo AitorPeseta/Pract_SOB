@@ -13,8 +13,6 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 import java.util.List;
 import jakarta.persistence.*;
-import jakarta.security.enterprise.credential.Credential;
-import jakarta.validation.constraints.NotNull;
 
 @XmlRootElement
 @Entity

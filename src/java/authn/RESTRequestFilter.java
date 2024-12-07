@@ -73,19 +73,19 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                             .getSingleResult();
                         if(!c.getPassword().equals(password)) {
                             requestCtx.abortWith(
-                                Response.status(Response.Status.FORBIDDEN).build()
+                                Response.status(Response.Status.FORBIDDEN).entity("Wrong username or password.").build()
                             );
                         }
                     } catch(@SuppressWarnings("unused") NoResultException e) {
                         requestCtx.abortWith(
-                            Response.status(Response.Status.UNAUTHORIZED).build()
+                            Response.status(Response.Status.UNAUTHORIZED).entity("Please authenticate to get access.").build()
                         );
                     }
                     if (method.getName().equalsIgnoreCase("getArticleId")){
                         if(comprovaPrivat(requestCtx)){ //Si es article privat comprovem si es autor el que ho demana
                             if (!(comprovaAutor(requestCtx, username, password))){
                                 requestCtx.abortWith(
-                                    Response.status(Response.Status.UNAUTHORIZED).entity("Access to the article is restricted to the owner.").build()
+                                    Response.status(Response.Status.UNAUTHORIZED).entity("Access to the article is restricted to the owner because it's private.").build()
                                 );
                             }
                         }
@@ -101,9 +101,11 @@ public class RESTRequestFilter implements ContainerRequestFilter {
             
             
                 } else {
-                   requestCtx.abortWith(
-                        Response.status(Response.Status.UNAUTHORIZED).build()
-                    );
+                    if (!(method.getName().equalsIgnoreCase("getArticleId") && !comprovaPrivat(requestCtx))){   //Si demanen article per ID pero no es privat, no cal auth.
+                        requestCtx.abortWith(
+                            Response.status(Response.Status.UNAUTHORIZED).entity("Please authenticate to get access.").build()
+                        );
+                    }
                 }
             }
         }
@@ -121,7 +123,7 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                 return false;
             }
             boolean esPublic = em.createNamedQuery("Article.isPublic", boolean.class).setParameter("id",id).getSingleResult();
-            return !esPublic;
+            return !esPublic;   //Es privat
         } catch (NoResultException e) { //No existeix article
             return false;
         }
