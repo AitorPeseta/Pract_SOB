@@ -19,6 +19,7 @@ import jakarta.annotation.Priority;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.container.ResourceInfo;
 import model.entities.Article;
+import model.entities.Customer;
 
 
 /**
@@ -105,11 +106,14 @@ public class RESTRequestFilter implements ContainerRequestFilter {
     }
 
     private boolean comprovaAutor(ContainerRequestContext requestCtx) {
-        /*String uri = requestCtx.getUriInfo().toString();
-        String[] cosas = uri.split("/");
-        String id = cosas[cosas.length];
-        boolean esAitor = (em.createNamedQuery("Article.findAuthor", Article.class).setParameter("id",id).getSingleResult()) != null;
-        return esAitor;*/
-        return true;
+        boolean esAitor = false;
+        String uri = requestCtx.getUriInfo().getRequestUri().toString();
+        String[] split = uri.split("/");
+        String ident = split[split.length-1];
+        int id = Integer.parseInt(ident);   //ID del articulo
+        Article articulo = (em.createNamedQuery("Article.findArticleId", Article.class).setParameter("id",id).getSingleResult());
+        Customer autor = (em.createNamedQuery("Article.findAuthor", Customer.class).setParameter("id",id).getSingleResult());
+        if(articulo.getAuthor().getId() == (autor.getId())){ esAitor = true; }
+        return esAitor;
     }
 }

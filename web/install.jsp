@@ -96,7 +96,6 @@
                     customerid1 = rs1.getLong(1);
                 }
 
-                out.println("<pre>Generated topic ID: " + customerid1 + "</pre>");
                 String insertCommentSQL1 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about databases...', NULL, 1, NULL, 'A brief overview of databases', 'Understanding Databases', 0, " + customerid1 + ")";   //Topics . 'Computer Science', 'Databases',
                 stmt.executeUpdate(insertCommentSQL1);
                 String idArticle1 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Understanding Databases'";
@@ -134,7 +133,6 @@
                     customerid2 = rs2.getLong(1);
                 }
 
-                out.println("<pre>Generated topic ID: " + customerid2 + "</pre>");
                 String insertCommentSQL2 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about Java programming...', NULL, 1, NULL, 'Summary of Java programming', 'Introduction to Java', 0, " + customerid2 + ")"; //topics : 'Databases', 'Programming'
                 stmt.executeUpdate(insertCommentSQL2);
                 String idArticle2 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Introduction to Java'";
@@ -145,7 +143,6 @@
                     articleid2 = rsa2.getLong(1);
                 }
                 out.println("<pre> -> " + insertCommentSQL2 + "</pre>");
-                out.println("<pre>Generated article ID: " + articleid2 + "</pre>");
                 
                 String updateCustomerSQL2 = "UPDATE " + schema + ".CUSTOMER SET lastArticleId = " + articleid2 + ", isAuthor = 1 WHERE id = " + customerid2 + "";
                 stmt.executeUpdate(updateCustomerSQL2);
@@ -172,7 +169,6 @@
                     customerid3 = rs3.getLong(1);
                 }
 
-                out.println("<pre>Generated topic ID: " + customerid3 + "</pre>");
                 String insertCommentSQL3 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Learn about HTML, CSS, and JavaScript...', NULL, 1, NULL, 'Quick start guide to web development', 'Web Development Basics', 0, " + customerid3 + ")"; //Topic : 'Programming'
                 stmt.executeUpdate(insertCommentSQL3);
                 String idArticle3 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Web Development Basics'";

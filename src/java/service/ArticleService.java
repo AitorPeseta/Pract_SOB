@@ -9,20 +9,13 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
 import model.entities.Article;
-import model.entities.Customer;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.SecurityContext;
-import java.security.Principal;
-import javax.annotation.security.RolesAllowed;
-import java.util.Calendar;
-import java.util.Date;
-import model.entities.Topic;
 
 @Path("article")
 
@@ -53,41 +46,47 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getArticles(@QueryParam("topic1") int topicid1,
-                                @QueryParam("topic2") int topicid2,
+    public Response getArticles(@QueryParam("topic") List<Integer>topics,
                                 @QueryParam("author") int author) {
         
-        // Caso 1: No hay filtros, usar findAllPublic
-        if ((topicid1 == 0 && topicid2 == 0) && (author == 0)) {
-            TypedQuery<Article> query = em.createNamedQuery("Article.findAllPublic", Article.class);
+        TypedQuery<Article> query = null;
+        if (topics.size()>2) { return Response.status(Response.Status.BAD_REQUEST).entity("Introduce como maximo 2 topics").build(); }
+        int topicid1, topicid2;
+        try {
+            topicid1 = topics.get(0);
+        } catch (Exception e){
+            topicid1 = 0;
+        }
+        try {
+            topicid2 = topics.get(1);
+        } catch (Exception e){
+            topicid2 = 0;
+        }
+        
+        if ((topicid1 == 0 && topicid2 == 0) && (author == 0)) { // Caso 1: No filtros
+            query= em.createNamedQuery("Article.findAllPublic", Article.class);
             List<Article> articles = query.getResultList();
             return Response.ok(articles).build();
+        } else if ((topicid1 == 0 && topicid2 == 0) && (author != 0)){  //Caso 2 solo 1 autor
+            query = em.createNamedQuery("Article.findByAuthor", Article.class).setParameter("author", author);
+        } else if ((topicid1 != 0 && topicid2 == 0) && (author == 0)){  //Caso 3 solo 1 topic
+            query = em.createNamedQuery("Article.findByTopic", Article.class).setParameter("topic", topicid1);
+        } else if ((topicid1 != 0 && topicid2 != 0) && (author == 0)){  //Caso 4 solo 2 topic
+            query = em.createNamedQuery("Article.findByTwoTopic", Article.class).setParameter("topic1", topicid1).setParameter("topic2", topicid2);
+        } else if ((topicid1 != 0 && topicid2 == 0) && (author != 0)){  //Caso 5 autor + 1 topic
+            query = em.createNamedQuery("Article.findByAuthorAndSingleTopic", Article.class).setParameter("author", author).setParameter("topic", topicid1);
+        } else if ((topicid1 != 0 && topicid2 != 0) && (author != 0)){  //Caso 5 autor + 2 topics
+            query = em.createNamedQuery("Article.findByAuthorAndBothTopics", Article.class).setParameter("author", author).setParameter("topic1", topicid1).setParameter("topic2", topicid2);
         }
 
-        // Caso 2: Filtros aplicados, usar findByAuthorAndTopics
-        TypedQuery<Article> query = em.createNamedQuery("Article.findByAuthorAndTopics", Article.class);
-        TypedQuery<Long> query2 = em.createNamedQuery("Topic.existTopic", Long.class);
-        TypedQuery<Long> query3 = em.createNamedQuery("Topic.existTopic", Long.class);
-        
-        query2.setParameter("id", topicid1 != 0 ? topicid1 : null);
-        query3.setParameter("id", topicid2 != 0 ? topicid2 : null);
-        
-        Long num1 = (Long) query2.getSingleResult();
-        Long num2 = (Long) query3.getSingleResult();
-        
-        if(num1 == 0 || num2 == 0 ) return Response.noContent().build(); 
-        
-        Long topicid1L = Long.valueOf(topicid1);
-        Long topicid2L = Long.valueOf(topicid2);
- 
-        // Asignación de parámetros, si no existen se asigna a null para no aplicarlos en la consulta
-        query.setParameter("author", author != 0 ? author : null);
-        query.setParameter("topic1Id", topicid1L != 0 ? topicid1L : null);
-        query.setParameter("topic2Id", topicid2L != 0 ? topicid2L : null);
-
         List<Article> articles = query.getResultList();
-        return Response.ok(articles).build();
+        if (articles.isEmpty()){ 
+            return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build(); 
+        } else { 
+            return Response.ok(articles).build(); 
+        }
     }
+
     
     
     /**
@@ -104,26 +103,45 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     @Path("/{id}")
     @Secured
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getArticleId(@PathParam("id") int id){
-        
-        
-        // Obtener el artículo de la base de datos usando su ID
-        Article article = em.createNamedQuery("Article.findArticleId", Article.class).setParameter("id",id).getSingleResult();
-        
-        if (article == null) {
-            return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
-        }
+    @Transactional
+    public Response getArticleId(@PathParam("id") int id) {
+        try {
+            if (id <= 0) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Invalid ID").build();
+            }
 
-        // Verificar si el artículo es privado
-        if (!article.getIsPublic()) {
-            return Response.status(Response.Status.UNAUTHORIZED).entity("Usuario no autenticado.").build();
-        }
+            // Obtener el artículo de la base de datos usando su ID
+            Article article = null;
+            // Buscamos articulos en lista para ver si está vacia
+            TypedQuery<Article> query = em.createNamedQuery("Article.findArticleId", Article.class)
+                    .setParameter("id", id);
+            List<Article> result = query.getResultList();
 
-        // Incrementar el contador de vistas
-        article.incrementViews();
+            if (result.isEmpty()) {
+                // Si la lista está vacía, significa que no se encontró el artículo
+                return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
+            } else {
+                // Si se encuentra, obtener el primer artículo de la lista
+                article = result.get(0);
+            }
 
-        return Response.ok(article).build();
+            // Verificar si el artículo es privado
+            if (!article.getIsPublic()) {
+                return Response.status(Response.Status.FORBIDDEN).entity("Access to the article is restricted.").build();
+            }
+
+            // Incrementar el contador de vistas
+            article.incrementViews();
+            em.merge(article); // Persistir el cambio en la base de datos
+            return Response.ok(article).build();
+        } catch (Exception e) {
+            e.printStackTrace(); // Imprime el stack trace para obtener más detalles.
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("An unexpected error occurred: " + e.toString())
+                    .build();
+        }// Manejo general de errores
     }
+
     
     
     /**
@@ -179,7 +197,7 @@ Per aquesta operació, cal que l'usuari estigui autentificat.
             query.setParameter("author", article.getAuthor().getId() != 0 ? article.getAuthor().getId() : null);
             query.setParameter("topic1Id", article.getTopic().get(0).getId() != 0 ? article.getTopic().get(0).getId() : null);
             query.setParameter("topic2Id", article.getTopic().get(1).getId() != 0 ? article.getTopic().get(1).getId() : null);
-            Article article2 = query.getSingleResult();
+            //Article article2 = query.getSingleResult();
 
             em.persist(article);
             //em.getTransaction().commit();

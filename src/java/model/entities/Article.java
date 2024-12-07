@@ -20,19 +20,42 @@ import jakarta.persistence.*;
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE ORDER BY a.views DESC"
     ),
     @NamedQuery(
-    name = "Article.findByAuthorAndTopics",
-    query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
-            "AND (:author IS NULL OR a.author.id = :author) " +
-            "AND ((:topic1Id IS NULL OR EXISTS (SELECT t.id FROM a.topics t )) " +
-            "AND (:topic2Id IS NULL OR EXISTS (SELECT t.id FROM a.topics t ))) " +
+    name = "Article.findByAuthorAndBothTopics",
+    query = "SELECT DISTINCT a FROM Article a " +
+            "WHERE a.isPublic = TRUE " +
+            "AND ((a.author.id = :author) " +
+            "AND (:topic1 IN (SELECT t.id FROM a.topics t)) " +
+            "AND (:topic2 IN (SELECT t.id FROM a.topics t)))" +
             "ORDER BY a.views DESC"
     ),
     @NamedQuery(
-    name = "Article.findByAuthorAndTopics2",
-    query = "SELECT a FROM Article a WHERE a.isPublic = TRUE " +
+    name = "Article.findByAuthor",
+    query = "SELECT DISTINCT a FROM Article a " +
+            "WHERE a.isPublic = TRUE " +
             "AND (a.author.id = :author) " +
-            "AND ((:topic1Id IN (SELECT t.id FROM a.topics t )) " +
-            "AND (:topic2Id IN (SELECT t.id FROM a.topics t ))) " +
+            "ORDER BY a.views DESC"
+    ),
+    @NamedQuery(
+    name = "Article.findByTopic",
+    query = "SELECT DISTINCT a FROM Article a " +
+            "WHERE a.isPublic = TRUE " +
+            "AND (:topic IN (SELECT t.id FROM a.topics t)) " +
+            "ORDER BY a.views DESC"
+    ),
+    @NamedQuery(
+    name = "Article.findByTwoTopic",
+    query = "SELECT DISTINCT a FROM Article a " +
+            "WHERE a.isPublic = TRUE " +
+            "AND (:topic1 IN (SELECT t.id FROM a.topics t)) " +
+            "AND (:topic2 IN (SELECT t.id FROM a.topics t)) " +
+            "ORDER BY a.views DESC"
+    ),
+    @NamedQuery(
+    name = "Article.findByAuthorAndSingleTopic",
+    query = "SELECT DISTINCT a FROM Article a " +
+            "WHERE a.isPublic = TRUE " +
+            "AND (a.author.id = :author) " +
+            "AND (:topic IN (SELECT t.id FROM a.topics t)) " +
             "ORDER BY a.views DESC"
     ),
     @NamedQuery(

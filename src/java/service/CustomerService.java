@@ -5,6 +5,7 @@
 package service;
 
 
+import authn.Credentials;
 import authn.Secured;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -120,10 +121,10 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
         currentCustomer.setEmail(updatedCustomer.getEmail());
         currentCustomer.setIsAuthor(updatedCustomer.getIsAuthor());
         currentCustomer.setRegistrationDate(updatedCustomer.getRegistrationDate());
-        
+        Credentials creds = updatedCustomer.getCredenciales();
             // Actualiza la relación de credenciales (si es necesario)
-        if (updatedCustomer.getCredenciales() != null) {
-            currentCustomer.setCredentials(updatedCustomer.getCredenciales());
+        if (creds != null) {
+            currentCustomer.setCredentials(creds);
         }
         
         // Guardar cambios en la base de datos
