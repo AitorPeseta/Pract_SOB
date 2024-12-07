@@ -82,11 +82,20 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                         );
                     }
                     if (method.getName().equalsIgnoreCase("getArticleId")){
-                        
+                        if(comprovaPrivat(requestCtx)){ //Si es article privat comprovem si es autor el que ho demana
+                            if (!(comprovaAutor(requestCtx, username, password))){
+                                requestCtx.abortWith(
+                                    Response.status(Response.Status.UNAUTHORIZED).build()
+                                );
+                            }
+                        }
                     }
-                     
                     if(method.getName().equalsIgnoreCase("deleteArticle")){
-                        
+                        if (!(comprovaAutor(requestCtx, username, password))){
+                            requestCtx.abortWith(
+                                Response.status(Response.Status.UNAUTHORIZED).build()
+                            );
+                        }
                     }
          // Fer la comprovació de si  l'article és privat o no amb JPQL; i si ho és, fer l'autentificació.
             
@@ -111,14 +120,14 @@ public class RESTRequestFilter implements ContainerRequestFilter {
             } catch (NumberFormatException e2){ //Id no numeric
                 return false;
             }
-            boolean esPrivat = em.createNamedQuery("Article.isPublic", boolean.class).setParameter("id",id).getSingleResult();
-            return !esPrivat;
+            boolean esPublic = em.createNamedQuery("Article.isPublic", boolean.class).setParameter("id",id).getSingleResult();
+            return !esPublic;
         } catch (NoResultException e) { //No existeix article
             return false;
         }
     }
 
-    private boolean comprovaAutor(ContainerRequestContext requestCtx) {
+    private boolean comprovaAutor(ContainerRequestContext requestCtx, String username, String password) {
         boolean esAitor = false;
         String uri = requestCtx.getUriInfo().getRequestUri().toString();
         String[] split = uri.split("/");
@@ -131,9 +140,7 @@ public class RESTRequestFilter implements ContainerRequestFilter {
         }
         try {
             Article articulo = (em.createNamedQuery("Article.findArticleId", Article.class).setParameter("id",id).getSingleResult());
-            
-            
-            if(articulo.getAuthor().getId() == (autor.getId())){ esAitor = true; }
+            if(articulo.getAuthor().getCredenciales().getUsername().equals(username) && articulo.getAuthor().getCredenciales().getPassword().equals(password)){ esAitor = true; }
             return esAitor;
         } catch (NoResultException e) { //No existeix article
             return false;
