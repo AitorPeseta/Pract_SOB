@@ -145,4 +145,24 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
 
         return Response.ok("Cliente actualizado correctamente.").build();
     }
+    
+    
+    /**
+     * GET /rest/api/v1/customer/${email}
+
+Afegit per la pràctica 2
+     */
+    @GET
+    @Path("/{email}")
+    @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    public Response findUserByEmail(@PathParam("email") String email){
+        try{
+            Customer customer = em.createNamedQuery("Customer.findWithoutSensitiveDataEmail", Customer.class).setParameter("email",email).getSingleResult();
+            if(customer == null) return Response.status(Response.Status.BAD_REQUEST).entity("Invalid email author").build();
+            else return Response.ok(customer).build();
+        } catch (NoResultException e){
+            return Response.status(Response.Status.NOT_FOUND).entity("Cliente no encontrado.").build();
+        }
+      
+    }
 }
