@@ -82,7 +82,7 @@ Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya 
      */
     
     @GET
-    @Path("/{id}")
+    @Path("/{id : \\d+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getCustomerId(@PathParam("id") String ids){
         int id;
@@ -153,7 +153,7 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
 Afegit per la pràctica 2
      */
     @GET
-    @Path("/{email}")
+    @Path("/{email : .+@.+\\..+}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response findUserByEmail(@PathParam("email") String email){
         try{
