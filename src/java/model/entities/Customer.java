@@ -32,10 +32,15 @@ import jakarta.persistence.*;
             query = "SELECT COUNT(c) FROM Customer c WHERE c.id = :id"
     ),
     @NamedQuery(
-            name = "Customer.findWithoutSensitiveDataEmail",
+            name = "Customer.findAllDataEmail",
             query = "SELECT NEW model.entities.Customer(c.id, c.credenciales, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
                 "FROM Customer c WHERE c.email = :email"
-    )
+    ),
+    @NamedQuery(
+            name = "Customer.findAllDataUser",
+            query = "SELECT NEW model.entities.Customer(c.id, c.credenciales, c.email, c.isAuthor, c.lastArticleId, c.registrationDate) " +
+                "FROM Customer c WHERE c.username = :username"
+    )    
 })
 public class Customer implements Serializable {
     private static final long serialVersionUID = 1L;
