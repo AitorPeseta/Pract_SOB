@@ -42,7 +42,19 @@
                 String insertCred = "INSERT INTO " + schema + ".CREDENTIALS VALUES (NEXT VALUE FOR CREDENTIALS_GEN, 'sob', 'sob')";
                 stmt.executeUpdate(insertCred);
                 
+                String sobcredentialsquery = "SELECT id FROM " + schema + ".CREDENTIALS WHERE username = 'sob'";
+                ResultSet resset = stmt.executeQuery(sobcredentialsquery);
+                Long sobcredentials = null;
+
+                if (resset.next()) {
+                    sobcredentials = resset.getLong(1);
+                }
+                
+                String insertusersob = "INSERT INTO " + schema + ".CUSTOMER VALUES (0 , 'sob@sob.com', 0, 0, '"+ data +"'," + sobcredentials +")";
+                stmt.executeUpdate(insertusersob);
+                
                 out.println("<pre> -> " + insertCred + "</pre>");
+                out.println("<pre> -> " + insertusersob + "</pre>");
                 
                 String insertTopic1 = "INSERT INTO " + schema + ".TOPIC VALUES (NEXT VALUE FOR TOPIC_GEN, 'Computer Science')";
                 stmt.executeUpdate(insertTopic1);
