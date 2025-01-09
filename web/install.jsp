@@ -50,7 +50,7 @@
                     sobcredentials = resset.getLong(1);
                 }
                 
-                String insertusersob = "INSERT INTO " + schema + ".CUSTOMER VALUES (0 , 'sob@sob.com', 0, 0, '"+ data +"'," + sobcredentials +")";
+                String insertusersob = "INSERT INTO " + schema + ".CUSTOMER VALUES (0 , 'sob@sob.com', 0, 0, NULL, '"+ data +"'," + sobcredentials +")";
                 stmt.executeUpdate(insertusersob);
                 
                 out.println("<pre> -> " + insertCred + "</pre>");
@@ -101,7 +101,7 @@
                 if (rsc1.next()) {
                     credentialid1 = rsc1.getLong(1);
                 }
-                String insertCustomerSQL1 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN , 'johndoe@example.com', 0, NULL, '"+ data +"'," + credentialid1 +")";
+                String insertCustomerSQL1 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN , 'johndoe@example.com', 0, NULL, '/resources/img/John.jpg', '"+ data +"'," + credentialid1 +")";
                 stmt.executeUpdate(insertCustomerSQL1);
                 // Recuperar el último valor de clave generada
                 String identityQuery1 = "SELECT id FROM " + schema + ".CUSTOMER WHERE credentials_id = "+credentialid1+"";
@@ -112,7 +112,7 @@
                     customerid1 = rs1.getLong(1);
                 }
 
-                String insertCommentSQL1 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about databases...', NULL, 1,'"+ data +"', 'A brief overview of databases', 'Understanding Databases', 0, " + customerid1 + ")";   //Topics . 'Computer Science', 'Databases',
+                String insertCommentSQL1 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Databases are essential for storing and managing structured data. This topic explains key concepts like tables, rows, and columns, as well as the use of SQL (Structured Query Language) for querying and manipulating data. It also covers the importance of databases in applications and an introduction to relational and non-relational database types.', '/resources/img/Understanding_Databases.png', 1,'"+ data +"', 'A brief overview of databases', 'Understanding Databases', 0, " + customerid1 + ")";   //Topics . 'Computer Science', 'Databases',
                 stmt.executeUpdate(insertCommentSQL1);
                 String idArticle1 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Understanding Databases'";
                 ResultSet rsa1 = stmt.executeQuery(idArticle1);
@@ -137,7 +137,7 @@
                     credentialid2 = rsc2.getLong(1);
                 }
                 
-                String insertCustomerSQL2 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN,'writerX@example.com', 0, NULL,'"+ data +"',"+credentialid2+")";
+                String insertCustomerSQL2 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN,'writerX@example.com', 0, NULL, '/resources/img/writerX.jpg', '"+ data +"',"+credentialid2+")";
                 stmt.executeUpdate(insertCustomerSQL2);
                 // Recuperar el último valor de clave generada
                 String identityQuery2 = "SELECT id FROM " + schema + ".CUSTOMER WHERE credentials_id = "+credentialid2+"";
@@ -149,7 +149,7 @@
                     customerid2 = rs2.getLong(1);
                 }
 
-                String insertCommentSQL2 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Content about Java programming...', NULL, 1,'"+ data +"', 'Summary of Java programming', 'Introduction to Java', 0, " + customerid2 + ")"; //topics : 'Databases', 'Programming'
+                String insertCommentSQL2 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Java is a versatile, object-oriented programming language widely used for web applications, mobile development (Android), and enterprise software. It is platform-independent thanks to the Java Virtual Machine (JVM). This topic introduces the fundamentals of Java, including syntax, basic concepts like classes and objects, and its role in software development.', '/resources/img/Introduction_Java.jpg', 1,'"+ data +"', 'Summary of Java programming', 'Introduction to Java', 0, " + customerid2 + ")"; //topics : 'Databases', 'Programming'
                 stmt.executeUpdate(insertCommentSQL2);
                 String idArticle2 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Introduction to Java'";
                 ResultSet rsa2 = stmt.executeQuery(idArticle2);
@@ -174,7 +174,7 @@
                     credentialid3 = rsc3.getLong(1);
                 }
                 
-                String insertCustomerSQL3 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'carmanyola@example.com', 0, NULL,'"+ data +"',"+credentialid3+")";
+                String insertCustomerSQL3 = "INSERT INTO " + schema + ".CUSTOMER VALUES (NEXT VALUE FOR CUSTOMER_GEN, 'carmanyola@example.com', 0, NULL, '/resources/img/Carmanyola.jpg', '"+ data +"',"+credentialid3+")";
                 stmt.executeUpdate(insertCustomerSQL3);
                 // Recuperar el último valor de clave generada
                 String identityQuery3 = "SELECT id FROM " + schema + ".CUSTOMER WHERE credentials_id = "+credentialid3+"";
@@ -185,7 +185,7 @@
                     customerid3 = rs3.getLong(1);
                 }
 
-                String insertCommentSQL3 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Learn about HTML, CSS, and JavaScript...', NULL, 1,'"+ data +"', 'Quick start guide to web development', 'Web Development Basics', 0, " + customerid3 + ")"; //Topic : 'Programming'
+                String insertCommentSQL3 = "INSERT INTO " + schema + ".ARTICLE VALUES (NEXT VALUE FOR ARTICLE_GEN, 'Web development involves creating and maintaining websites. It focuses on the front-end (what users see) using HTML, CSS, and JavaScript, and the back-end (server-side) using programming languages and frameworks. This topic covers essential concepts like building responsive designs, understanding how websites interact with servers, and ensuring a smooth user experience.', '/resources/img/Web_Development_Basics.png', 0,'"+ data +"', 'Quick start guide to web development', 'Web Development Basics', 0, " + customerid3 + ")"; //Topic : 'Programming'
                 stmt.executeUpdate(insertCommentSQL3);
                 String idArticle3 = "SELECT id FROM " + schema + ".ARTICLE WHERE title = 'Web Development Basics'";
                 ResultSet rsa3 = stmt.executeQuery(idArticle3);

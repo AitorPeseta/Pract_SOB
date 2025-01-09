@@ -7,6 +7,7 @@ package service;
 
 import authn.Credentials;
 import authn.Secured;
+import jakarta.annotation.Resource;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -14,6 +15,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import jakarta.transaction.UserTransaction;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import java.security.Principal;
@@ -43,6 +45,7 @@ Si l'usuari és autor d'un article, cal indicar que és autor i retornar l'enlla
                  }
 Aquesta crida no pot retornar informació confidencial, p. ex., la  contrasenya dels usuaris.
      */
+    
     @PersistenceContext(unitName = "Homework1PU")
     private EntityManager em;
 
@@ -157,7 +160,7 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response findUserByEmail(@PathParam("email") String email){
         try{
-            Customer customer = em.createNamedQuery("Customer.findAllDataEmail", Customer.class).setParameter("email",email).getSingleResult();
+            Customer customer = em.createNamedQuery("Customer.findWithoutSensitiveDataEmail", Customer.class).setParameter("email",email).getSingleResult();
             if(customer == null) return Response.status(Response.Status.BAD_REQUEST).entity("Invalid email author").build();
             else return Response.ok(customer).build();
         } catch (NoResultException e){
@@ -183,5 +186,23 @@ Opcional! Modifica les dades del client amb identificador ${id} al sistema amb l
             return Response.status(Response.Status.NOT_FOUND).entity("Username "+username+" not registered.").build();
         }
       
+    }
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @Transactional
+    public Response addUser(Customer newCustomer){
+        System.out.println("Customer cosas"+newCustomer.getEmail());
+
+        try{    
+            Customer customer = new Customer();
+            customer.setCredenciales(newCustomer.getCredenciales());
+            customer.setEmail(newCustomer.getEmail());
+            em.persist(customer.getCredenciales());
+            em.persist(customer);
+            return Response.ok("Cliente Creado correctamente.").build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Response.status(Response.Status.BAD_REQUEST).entity("Cliente no se ha podido guardar").build();
+        }        
     }
 }

@@ -49,7 +49,7 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     public Response getArticles(@QueryParam("topic") List<Integer>topics,
-                                @QueryParam("author") int author) {
+                                @QueryParam("author") String authors) {
         
         
         TypedQuery<Article> query = null;
@@ -66,8 +66,18 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
             topicid2 = 0;
         }
         
+        int author;
+        try{
+            if(authors != null)
+                author = Integer.parseInt(authors);
+            else 
+                author = 0;
+        } catch (NumberFormatException e2){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce una ID numerica valida").build();
+        }
+        
         if ((topicid1 == 0 && topicid2 == 0) && (author == 0)) { // Caso 1: No filtros
-            query= em.createNamedQuery("Article.findAllPublic", Article.class);
+            query= em.createNamedQuery("Article.findAll", Article.class);
             List<Article> articles = query.getResultList();
             return Response.ok(articles).build();
         } else if ((topicid1 == 0 && topicid2 == 0) && (author != 0)){  //Caso 2 solo 1 autor
@@ -83,6 +93,7 @@ El filtratge s'ha de fer mitjançant una consulta a la base de dades. No s'accep
         }
 
         List<Article> articles = query.getResultList();
+        
         if (articles.isEmpty()){ 
             return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build(); 
         } else { 
@@ -173,7 +184,7 @@ Opcional! Esborra l'article amb identificador ${id} del sistema.Per aquesta oper
                         .setParameter("id", id);
             List<Article> result = query.getResultList();
             if (result.isEmpty()) {
-                return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontrado.").build();
+                return Response.status(Response.Status.NOT_FOUND).entity("Artículo no encontradoo.").build();
             }
             Article article = result.get(0);
 
@@ -241,5 +252,41 @@ Per aquesta operació, cal que l'usuari estigui autentificat.
                          .build();
             }
         }
+    }
+    
+    @GET
+    @Path("/isprivate/{id}")
+    public Response isPrivate(@PathParam("id") String ids) {
+        int id;
+        try{
+            id = Integer.parseInt(ids);
+        } catch (NumberFormatException e2){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Introduce una ID numerica valida").build();
+        }
+        if (id <= 0) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid ID").build();
+        }
+
+        // Obtener el artículo de la base de datos usando su ID
+        Article article;
+        // Buscamos articulos en lista para ver si está vacia
+        TypedQuery<Article> query = em.createNamedQuery("Article.findArticleId", Article.class)
+                .setParameter("id", id);
+        List<Article> result = query.getResultList();
+
+        if (result.isEmpty()) {
+            // Si la lista está vacía, significa que no se encontró el artículo
+            return Response.status(Response.Status.NOT_FOUND).entity("Article not found").build();
+        } else {
+            // Si se encuentra, obtener el primer artículo de la lista
+            article = result.get(0);
+        }
+
+        // Verificar si el artículo es privado
+        if (!article.getIsPublic()) {
+            return Response.status(Response.Status.FORBIDDEN).entity("Access to the article is restricted.").build();
+        }
+
+        return Response.ok(article).build();
     }
 }

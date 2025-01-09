@@ -54,6 +54,8 @@ public class Customer implements Serializable {
     private boolean isAuthor;
     
     private Long lastArticleId; // Para HATEOAS
+    
+    private String perfil;
         
     private Date registrationDate = new Date();
     
@@ -78,6 +80,10 @@ public class Customer implements Serializable {
     
     public Long getLastArticleId() {
         return lastArticleId;
+    }
+    
+    public String getPerfil() {
+        return perfil;
     }
     
     public Date getRegistrationDate() {
@@ -107,6 +113,10 @@ public class Customer implements Serializable {
     
     public void setLastArticleId(Long lastArticleId) {
         this.lastArticleId = lastArticleId;
+    }
+    
+    public void setPerfil(String perfil) {
+        this.perfil = perfil;
     }
 
     public void setRegistrationDate(Date registrationDate) {
@@ -146,7 +156,7 @@ public class Customer implements Serializable {
     
     @Override
     public String toString() {
-        return "Customer{" + "id=" + id + ", credenciales=" + credenciales + ", email=" + email + ", isAuthor=" + isAuthor + ", lastArticleId=" + lastArticleId + ", registrationDate=" + registrationDate + ", articles=" + articles + '}';
+        return "Customer{" + "id=" + id + ", credenciales=" + credenciales + ", email=" + email + ", isAuthor=" + isAuthor + ", lastArticleId=" + lastArticleId + ", perfil=" + perfil + ", registrationDate=" + registrationDate + ", articles=" + articles + '}';
     }
     
      public static long getSerialVersionUID() {

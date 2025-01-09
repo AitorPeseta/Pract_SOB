@@ -20,43 +20,42 @@ import jakarta.persistence.*;
         query = "SELECT a FROM Article a WHERE a.isPublic = TRUE ORDER BY a.views DESC"
     ),
     @NamedQuery(
+        name = "Article.findAll",
+        query = "SELECT a FROM Article a ORDER BY a.views DESC"
+    ),
+    @NamedQuery(
     name = "Article.findByAuthorAndBothTopics",
     query = "SELECT DISTINCT a FROM Article a " +
-            "WHERE a.isPublic = TRUE " +
-            "AND ((a.author.id = :author) " +
+            "WHERE ((a.author.id = :author) " +
             "AND (:topic1 IN (SELECT t.id FROM a.topics t)) " +
-            "AND (:topic2 IN (SELECT t.id FROM a.topics t)))" +
-            "ORDER BY a.views DESC"
+            "AND (:topic2 IN (SELECT t.id FROM a.topics t))) " +
+            "ORDER BY a.views DESC, LOWER(a.title) ASC"
     ),
     @NamedQuery(
     name = "Article.findByAuthor",
     query = "SELECT DISTINCT a FROM Article a " +
-            "WHERE a.isPublic = TRUE " +
-            "AND (a.author.id = :author) " +
-            "ORDER BY a.views DESC"
+            "WHERE (a.author.id = :author) " +
+            "ORDER BY a.views DESC, LOWER(a.title) ASC"
     ),
     @NamedQuery(
     name = "Article.findByTopic",
     query = "SELECT DISTINCT a FROM Article a " +
-            "WHERE a.isPublic = TRUE " +
-            "AND (:topic IN (SELECT t.id FROM a.topics t)) " +
-            "ORDER BY a.views DESC"
+            "WHERE (:topic IN (SELECT t.id FROM a.topics t)) " +
+            "ORDER BY a.views DESC, LOWER(a.title) ASC"
     ),
     @NamedQuery(
     name = "Article.findByTwoTopic",
     query = "SELECT DISTINCT a FROM Article a " +
-            "WHERE a.isPublic = TRUE " +
-            "AND (:topic1 IN (SELECT t.id FROM a.topics t)) " +
+            "WHERE (:topic1 IN (SELECT t.id FROM a.topics t)) " +
             "AND (:topic2 IN (SELECT t.id FROM a.topics t)) " +
-            "ORDER BY a.views DESC"
+            "ORDER BY a.views DESC, LOWER(a.title) ASC"
     ),
     @NamedQuery(
     name = "Article.findByAuthorAndSingleTopic",
     query = "SELECT DISTINCT a FROM Article a " +
-            "WHERE a.isPublic = TRUE " +
-            "AND (a.author.id = :author) " +
+            "WHERE (a.author.id = :author) " +
             "AND (:topic IN (SELECT t.id FROM a.topics t)) " +
-            "ORDER BY a.views DESC"
+            "ORDER BY a.views DESC, LOWER(a.title) ASC"
     ),
     @NamedQuery(
             name = "Article.findArticleId",
@@ -79,6 +78,7 @@ public class Article implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "Article_Gen")
     private int id;
     
+    @Column(length = 2000)
     private String content;
     
     private String featuredImageUrl;
@@ -86,10 +86,11 @@ public class Article implements Serializable {
     private boolean isPublic;
     
     @Temporal(TemporalType.TIMESTAMP)
-    private Date publishedDate = new Date();
+    private Date publishedDate;
     
     private String summary;
     
+    @Column(unique = true)
     private String title;
     
     private Integer views;
