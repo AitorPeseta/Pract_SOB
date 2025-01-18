@@ -118,7 +118,8 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
     @Secured
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Transactional
-    public Response getArticleId(@PathParam("id") String ids) {
+    public Response getArticleId(@PathParam("id") String ids, @HeaderParam("Authorization") String authorization) {
+        System.out.println("Entro p1");
         int id;
         try{
             id = Integer.parseInt(ids);
@@ -145,9 +146,13 @@ Aquesta operació implica augmentar el nombre de visualitzacions de l'article en
         }
 
         // Verificar si el artículo es privado
-        /*if (!article.getIsPublic()) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Access to the article is restricted.").build();
-        }*/
+        if (!article.getIsPublic()) {
+            if (authorization == null || authorization.isEmpty()) {
+                return Response.status(Response.Status.FORBIDDEN)
+                               .entity("Access to the article is restricted. Authorization header is missing.")
+                               .build();
+            }
+        }
 
         // Incrementar el contador de vistas
         article.incrementViews();

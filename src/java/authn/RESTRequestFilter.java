@@ -83,7 +83,7 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                     }
                     if (method.getName().equalsIgnoreCase("getArticleId")){
                         if(comprovaPrivat(requestCtx)){ //Si es article privat comprovem si es autor el que ho demana
-                            if (!(comprovaAutor(requestCtx, username, password))){
+                            if (username == null && password == null){  //CANVI RESPECTE PRAC 1
                                 requestCtx.abortWith(
                                     Response.status(Response.Status.UNAUTHORIZED).entity("Access to the article is restricted to the owner because it's private.").build()
                                 );
