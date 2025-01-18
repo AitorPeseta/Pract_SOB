@@ -81,7 +81,15 @@ public class RESTRequestFilter implements ContainerRequestFilter {
                             Response.status(Response.Status.UNAUTHORIZED).entity("Please authenticate to get access.").build()
                         );
                     }
-                    
+                    if (method.getName().equalsIgnoreCase("getArticleId")){
+                        if(comprovaPrivat(requestCtx)){ //Si es article privat comprovem si es autor el que ho demana
+                            if (!(comprovaAutor(requestCtx, username, password))){
+                                requestCtx.abortWith(
+                                    Response.status(Response.Status.UNAUTHORIZED).entity("Access to the article is restricted to the owner because it's private.").build()
+                                );
+                            }
+                        }
+                    }
                     if(method.getName().equalsIgnoreCase("deleteArticle")){
                         if (!(comprovaAutor(requestCtx, username, password))){
                             requestCtx.abortWith(
@@ -93,7 +101,7 @@ public class RESTRequestFilter implements ContainerRequestFilter {
             
             
                 } else {
-                    if (!(method.getName().equalsIgnoreCase("getArticleId") )){   //Si demanen article per ID pero no es privat, no cal auth.
+                    if (!(method.getName().equalsIgnoreCase("getArticleId") && !comprovaPrivat(requestCtx))){   //Si demanen article per ID pero no es privat, no cal auth.
                         requestCtx.abortWith(
                             Response.status(Response.Status.UNAUTHORIZED).entity("Please authenticate to get access.").build()
                         );
